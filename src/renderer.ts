@@ -29,6 +29,9 @@
 import './pico.jade.css';
 import './index.css';
 
+import van from "vanjs-core"
+const v = van.tags
+
 import { basicSetup } from "codemirror"
 import { EditorView } from "@codemirror/view"
 import { oneDark } from "@codemirror/theme-one-dark"
@@ -44,18 +47,19 @@ const fixedHeightEditor = EditorView.theme({
         minHeight: "0px",
         resize: "horizontal",
         overflow: "auto",
-        // width: "24em",
+        width: "30vw",
         minWidth: "8em",
     },
     ".cm-scroller": { overflow: "auto" }
 })
 
 function addView() {
-    new EditorView({
+    const view = new EditorView({
         doc: "Start document",
-        parent: document.getElementById("editorGrid"),
         extensions: [basicSetup, oneDark, fixedHeightEditor]
     })
+    const wrapper = v.div({class: "editorWrapper"}, view.dom);
+    document.getElementById("editorGrid").appendChild(wrapper);
 }
 
 document.getElementById("addEditor")?.addEventListener("click", addView);

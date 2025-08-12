@@ -30,16 +30,12 @@ import './pico.jade.css';
 import './index.css';
 
 import van from "vanjs-core"
+import * as vanX from "vanjs-ext"
 const v = van.tags
 
 import { basicSetup } from "codemirror"
 import { EditorView } from "@codemirror/view"
 import { oneDark } from "@codemirror/theme-one-dark"
-
-// const fixedHeightEditor = EditorView.theme({
-//   "&": {height: "100%"},
-//   ".cm-scroller": {overflow: "auto"}
-// })
 
 const fixedHeightEditor = EditorView.theme({
     "&": {
@@ -47,19 +43,35 @@ const fixedHeightEditor = EditorView.theme({
         minHeight: "0px",
         resize: "horizontal",
         overflow: "auto",
-        width: "400px",
+        width: "600px",
         minWidth: "8em",
     },
     ".cm-scroller": { overflow: "auto" }
 })
 
+class EditorColumn {
+    view: EditorView;
+    wrapper: HTMLElement;
+
+    constructor() {
+        this.view = new EditorView({
+            doc: "Start document",
+            extensions: [basicSetup, oneDark, fixedHeightEditor]
+        })
+        console.log("Character width: ", this.view.defaultCharacterWidth);
+        this.wrapper = v.div({ class: "editorWrapper" }, this.view.dom);
+    }
+    get dom() {
+        return this.wrapper;
+    }
+}
+
+// Create and mount editor list
+const editors = vanX.reactive([]);
+vanX.list(document.getElementById("editorGrid"), editors, v => v.val.dom);
+
 function addView() {
-    const view = new EditorView({
-        doc: "Start document",
-        extensions: [basicSetup, oneDark, fixedHeightEditor]
-    })
-    const wrapper = v.div({class: "editorWrapper"}, view.dom);
-    document.getElementById("editorGrid").appendChild(wrapper);
+    editors.push(vanX.noreactive(new EditorColumn()));
 }
 
 document.getElementById("addEditor")?.addEventListener("click", addView);

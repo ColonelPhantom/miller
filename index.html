@@ -3,11 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <title>Hello World!</title>
-
   </head>
   <body>
-    <h1>💖 Hello World!</h1>
-    <p>Welcome to your Electron application.</p>
+    <header>Miller code editor - welcome! <button id="addEditor">Add Editor</button></header>
+    <aside>
+      <nav>
+        <p>Files go here</p>
+        <p>foo</p>
+        <p>bar</p>
+      </nav>
+    </aside>
+    <main id="editorGrid">
+    </main>
     <script type="module" src="/src/renderer.ts"></script>
   </body>
 </html>

@@ -26,6 +26,38 @@
  * ```
  */
 
+import './pico.jade.css';
 import './index.css';
 
-console.log('👋 This message is being logged by "renderer.ts", included via Vite');
+import { basicSetup } from "codemirror"
+import { EditorView } from "@codemirror/view"
+import { oneDark } from "@codemirror/theme-one-dark"
+
+// const fixedHeightEditor = EditorView.theme({
+//   "&": {height: "100%"},
+//   ".cm-scroller": {overflow: "auto"}
+// })
+
+const fixedHeightEditor = EditorView.theme({
+    "&": {
+        height: "100%",
+        minHeight: "0px",
+        resize: "horizontal",
+        overflow: "auto",
+        // width: "24em",
+        minWidth: "8em",
+    },
+    ".cm-scroller": { overflow: "auto" }
+})
+
+function addView() {
+    new EditorView({
+        doc: "Start document",
+        parent: document.getElementById("editorGrid"),
+        extensions: [basicSetup, oneDark, fixedHeightEditor]
+    })
+}
+
+document.getElementById("addEditor")?.addEventListener("click", addView);
+
+addView();

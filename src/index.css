@@ -13,7 +13,7 @@ body {
   /* padding: 0; */
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  grid-template-columns: 1fr minmax(0, 4fr);
+  grid-template-columns: auto minmax(0, 4fr);
 }
 
 body > header {
@@ -37,7 +37,7 @@ aside {
 
   min-width: 120px;
   max-width: 50vw;
-  width: 20wv;
+  width: 200px;
 }
 
 #editorGrid {

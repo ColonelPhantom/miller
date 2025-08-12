@@ -47,7 +47,7 @@ const fixedHeightEditor = EditorView.theme({
         minHeight: "0px",
         resize: "horizontal",
         overflow: "auto",
-        width: "30vw",
+        width: "400px",
         minWidth: "8em",
     },
     ".cm-scroller": { overflow: "auto" }

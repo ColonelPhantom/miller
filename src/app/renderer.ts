@@ -26,18 +26,18 @@
  * ```
  */
 
-import './pico.jade.css';
-import './index.css';
+import "./pico.jade.css";
+import "./index.css";
 
-import van from "vanjs-core"
-import * as vanX from "vanjs-ext"
-const v = van.tags
+import van from "vanjs-core";
+import * as vanX from "vanjs-ext";
+const v = van.tags;
 
-import { basicSetup } from "codemirror"
-import { EditorView } from "@codemirror/view"
-import { oneDark } from "@codemirror/theme-one-dark"
+import { basicSetup } from "codemirror";
+import { EditorView } from "@codemirror/view";
+import { oneDark } from "@codemirror/theme-one-dark";
 
-import './foldernav.ts'
+import "./foldernav.ts";
 
 const fixedHeightEditor = EditorView.theme({
     "&": {
@@ -48,8 +48,8 @@ const fixedHeightEditor = EditorView.theme({
         width: "600px",
         minWidth: "8em",
     },
-    ".cm-scroller": { overflow: "auto" }
-})
+    ".cm-scroller": { overflow: "auto" },
+});
 
 class EditorColumn {
     view: EditorView;
@@ -58,8 +58,8 @@ class EditorColumn {
     constructor() {
         this.view = new EditorView({
             doc: "Start document",
-            extensions: [basicSetup, oneDark, fixedHeightEditor]
-        })
+            extensions: [basicSetup, oneDark, fixedHeightEditor],
+        });
         console.log("Character width: ", this.view.defaultCharacterWidth);
         this.wrapper = v.div({ class: "editorWrapper" }, this.view.dom);
     }
@@ -70,7 +70,7 @@ class EditorColumn {
 
 // Create and mount editor list
 const editors = vanX.reactive([]);
-vanX.list(document.getElementById("editorGrid"), editors, v => v.val.dom);
+vanX.list(document.getElementById("editorGrid"), editors, (v) => v.val.dom);
 
 function addView() {
     editors.push(vanX.noreactive(new EditorColumn()));

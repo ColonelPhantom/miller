@@ -1,54 +1,54 @@
 /* Grid layout stuff (main) */
 body {
-  width: 100vw;
-  height: 100vh;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  grid-template-columns: auto minmax(0, 4fr);
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 4fr);
 }
 
 body > header {
-  padding: 0px;
-  grid-column: 1 / -1;
-  grid-row: 1;
+    padding: 0px;
+    grid-column: 1 / -1;
+    grid-row: 1;
 }
 
 body > main {
-  grid-column: 2;
-  grid-row: 2;
-  padding: 0;
+    grid-column: 2;
+    grid-row: 2;
+    padding: 0;
 }
 
 aside {
-  grid-column: 1;
-  grid-row: 2;
-  resize: horizontal;
-  overflow: hidden;
-  border: 1px solid green;
-  white-space: nowrap;
+    grid-column: 1;
+    grid-row: 2;
+    resize: horizontal;
+    overflow: hidden;
+    border: 1px solid green;
+    white-space: nowrap;
 
-  min-width: 90px;
-  max-width: 50vw;
-  width: 200px;
+    min-width: 90px;
+    max-width: 50vw;
+    width: 200px;
 }
 
 /* Editor grid stuff */
 
 #editorGrid {
-  display: grid;
-  height: minmax(0, 100%);
-  width: minmax(0, 100%);
-  overflow: auto;
-  grid-auto-flow: column;
-  grid-auto-columns: min-content;
-  grid-gap: 1em;
-  grid-template-columns: none;
-  /* grid-template-columns: 1fr; */
-  overflow-x: auto;
+    display: grid;
+    height: minmax(0, 100%);
+    width: minmax(0, 100%);
+    overflow: auto;
+    grid-auto-flow: column;
+    grid-auto-columns: min-content;
+    grid-gap: 1em;
+    grid-template-columns: none;
+    /* grid-template-columns: 1fr; */
+    overflow-x: auto;
 }
 
 .editorWrapper {
-  min-width: fit-content;
+    min-width: fit-content;
 }
 
 /* Navbar styling */

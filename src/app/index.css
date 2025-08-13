@@ -1,16 +1,7 @@
-/* body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
-    Arial, sans-serif;
-  margin: auto;
-  max-width: 38rem;
-  padding: 2rem;
-} */
-
+/* Grid layout stuff (main) */
 body {
   width: 100vw;
   height: 100vh;
-  /* margin: 0; */
-  /* padding: 0; */
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-columns: auto minmax(0, 4fr);
@@ -41,6 +32,8 @@ aside {
   width: 200px;
 }
 
+/* Editor grid stuff */
+
 #editorGrid {
   display: grid;
   height: minmax(0, 100%);
@@ -57,3 +50,5 @@ aside {
 .editorWrapper {
   min-width: fit-content;
 }
+
+/* Navbar styling */

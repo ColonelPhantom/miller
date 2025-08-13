@@ -37,6 +37,8 @@ import { basicSetup } from "codemirror"
 import { EditorView } from "@codemirror/view"
 import { oneDark } from "@codemirror/theme-one-dark"
 
+import './foldernav.ts'
+
 const fixedHeightEditor = EditorView.theme({
     "&": {
         height: "100%",

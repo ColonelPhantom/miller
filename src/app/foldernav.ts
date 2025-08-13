@@ -87,8 +87,5 @@ const FsItemView = (tree: FolderTree): HTMLElement | string => {
     // // );
 };
 
-// Mount the folder tree view reactively to the nav
-const nav = document.querySelector("aside nav");
-if (nav) {
-    van.add(nav, () => FolderTreeView());
-}
+// Mount the folder tree view to the nav
+van.add(document.querySelector("aside nav"), FolderTreeView);

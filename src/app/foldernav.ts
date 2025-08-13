@@ -5,7 +5,7 @@ import type { FolderTree } from "../types/global";
 const folderTreeState = van.state<FolderTree | null>(null);
 
 async function openFolder() {
-    const folderTree = await window.electronAPI.openFolder();
+    const folderTree = await window.electronAPI.openFolder().catch(alert);
     if (!folderTree) return;
     folderTreeState.val = folderTree;
 }
@@ -15,19 +15,7 @@ const FolderTreeView = () => {
         return v.div(
             { style: "text-align: center; margin-top: 25px;" },
             v.p("No folder selected!"),
-            v.p(
-                v.button(
-                    {
-                        onclick: async () => {
-                            const folderTree =
-                                await window.electronAPI.openFolder();
-                            if (!folderTree) return;
-                            folderTreeState.val = folderTree;
-                        },
-                    },
-                    "Open Folder",
-                ),
-            ),
+            v.button({ onclick: openFolder }, "Open Folder"),
         );
     }
     return v.div(
@@ -55,36 +43,22 @@ const FolderTreeView = () => {
     );
 };
 
-const FsItemView = (tree: FolderTree): HTMLElement | string => {
+// TODO: determine if lazy DOM creation is better or not.
+// Alternatively, investigate lazy FS traversal in main.
+const FsItemView = (tree: FolderTree): HTMLElement => {
     if (tree.type === "file") return v.p(tree.name);
-    return v.details(v.summary(tree.name), tree.children?.map(FsItemView));
+    const isOpen = van.state(false);
+    const children = () =>
+        isOpen.val
+            ? v.div(tree.children?.map(FsItemView))
+            : v.div({ ariaBusy: true });
+    const folder = v.details(
+        { ontoggle: () => (isOpen.val = folder.open) },
+        v.summary(tree.name),
+        children,
+    );
 
-    // if (tree.type === "file") return v.div(" ", tree.name);
-    // // Use a state to track open/close instead of <details>
-    // const isOpen = van.state(0);
-    // return v.div(
-    //     {
-    //         style: "cursor: pointer; user-select: none; font-weight: bold;",
-    //         onclick: () => isOpen.val++,
-    //     },
-    //     () => (isOpen.val ? "▼ " : "▶ "),
-    //     tree.name,
-    // );
-    // // return v.div(
-    // //     v.span(
-    // //         {
-    // //             style: "cursor: pointer; user-select: none; font-weight: bold;",
-    // //             onclick: () => {
-    // //                 console.log("opening");
-    // //                 isOpen.val++;
-    // //             },
-    // //         },
-    // //         () => (isOpen.val ? "▼ " : "▶ "),
-    // //         tree.name,
-    // //     ),
-    // //     " ",
-    // //     isOpen.val,
-    // // );
+    return folder;
 };
 
 // Mount the folder tree view to the nav

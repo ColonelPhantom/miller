@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain } from "electron";
-import { handleOpenFolder, readFolderContents } from "./fileOperations";
+import { handleOpenFolder } from "./fileOperations";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 
@@ -45,12 +45,12 @@ app.whenReady().then(() => {
         return await handleOpenFolder(senderWindow);
     });
     createWindow();
-    app.on("activate", function () {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
-    });
+    if (process.platform === "darwin") {
+        app.on("activate", function () {
+            if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        });
+    }
 });
-
-app.on("ready", createWindow);
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

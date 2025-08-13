@@ -11,5 +11,9 @@
     "outDir": "dist",
     "moduleResolution": "node",
     "resolveJsonModule": true
-  }
+  },
+  "include": [
+    "src/types/global.d.ts",
+    "src/**/*.ts"
+  ]
 }

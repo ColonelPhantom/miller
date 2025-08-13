@@ -2,7 +2,9 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from "electron";
+import type { FolderTree } from "./types/global";
 
 contextBridge.exposeInMainWorld("electronAPI", {
-    openFolder: () => ipcRenderer.invoke("dialog:openFolder"),
+    openFolder: () =>
+        ipcRenderer.invoke("dialog:openFolder") as Promise<FolderTree | null>,
 });

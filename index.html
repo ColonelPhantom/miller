@@ -1,24 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Miller code editor</title>
-  </head>
-  <body>
-    <header>Miller code editor - welcome!
-      <button id="addEditor">Add Editor</button>
-      <button id="openFolder">Open Folder</button>
-      <strong id="currentFolder">N/A</strong>
-    </header>
-    <aside>
-      <nav>
-        <p>Files go here</p>
-        <p>foo</p>
-        <p>bar</p>
-      </nav>
-    </aside>
-    <main id="editorGrid">
-    </main>
-    <script type="module" src="/src/app/renderer.ts"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Miller code editor</title>
+    </head>
+    <body>
+        <header>
+            Miller code editor - welcome!
+            <button id="addEditor">Add Editor</button>
+        </header>
+        <aside>
+            <nav></nav>
+        </aside>
+        <main id="editorGrid"></main>
+        <script type="module" src="/src/app/renderer.ts"></script>
+    </body>
 </html>

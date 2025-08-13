@@ -33,7 +33,6 @@ aside {
 }
 
 /* Editor grid stuff */
-
 #editorGrid {
     display: grid;
     height: minmax(0, 100%);
@@ -52,3 +51,16 @@ aside {
 }
 
 /* Navbar styling */
+nav details {
+    margin-bottom: 0px;
+}
+nav details[open] summary,
+nav details summary,
+nav div p {
+    margin-bottom: 5px;
+    line-height: 1.2;
+}
+nav details[open] :not(summary) {
+    margin-left: 16px;
+}
+/* closed detail summary */

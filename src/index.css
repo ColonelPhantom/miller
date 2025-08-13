@@ -34,8 +34,9 @@ aside {
   resize: horizontal;
   overflow: hidden;
   border: 1px solid green;
+  white-space: nowrap;
 
-  min-width: 120px;
+  min-width: 90px;
   max-width: 50vw;
   width: 200px;
 }

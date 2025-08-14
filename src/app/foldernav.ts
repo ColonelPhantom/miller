@@ -13,9 +13,15 @@ async function openFolder() {
 const FolderTreeView = () => {
     if (!folderTreeState.val) {
         return v.div(
-            { style: "text-align: center; margin-top: 25px;" },
+            {
+                // style: "text-align: center; margin-top: 25px;",
+                class: "text-center m-4",
+            },
             v.p("No folder selected!"),
-            v.button({ onclick: openFolder }, "Open Folder"),
+            v.button(
+                { class: "bg-green-500 p-2", onclick: openFolder },
+                "Open Folder",
+            ),
         );
     }
     return v.div(

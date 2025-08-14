@@ -26,7 +26,7 @@
  * ```
  */
 
-import "./pico.jade.css";
+// import "./pico.jade.css";
 import "./index.css";
 
 import van from "vanjs-core";
@@ -47,6 +47,7 @@ const fixedHeightEditor = EditorView.theme({
         overflow: "auto",
         width: "600px",
         minWidth: "8em",
+        flex: "none",
     },
     ".cm-scroller": { overflow: "auto" },
 });
@@ -61,7 +62,7 @@ class EditorColumn {
             extensions: [basicSetup, oneDark, fixedHeightEditor],
         });
         console.log("Character width: ", this.view.defaultCharacterWidth);
-        this.wrapper = v.div({ class: "editorWrapper" }, this.view.dom);
+        this.wrapper = v.div({ class: "editorWrapper min-h-0" }, this.view.dom);
     }
     get dom() {
         return this.wrapper;

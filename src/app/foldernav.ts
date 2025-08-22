@@ -2,6 +2,8 @@ import van from "vanjs-core";
 const v = van.tags;
 import type { FolderTree } from "../types/global";
 
+import * as u from "./utils";
+
 const folderTreeState = van.state<FolderTree | null>(null);
 
 async function openFolder() {
@@ -13,37 +15,20 @@ async function openFolder() {
 const FolderTreeView = () => {
     if (!folderTreeState.val) {
         return v.div(
-            {
-                // style: "text-align: center; margin-top: 25px;",
-                class: "text-center m-4",
-            },
+            { class: "text-center m-4" },
             v.p("No folder selected!"),
-            v.button(
-                { class: "bg-green-500 p-2", onclick: openFolder },
-                "Open Folder",
-            ),
+            u.Button(openFolder, "Open Folder"),
         );
     }
     return v.div(
-        v.span(
-            { style: "font-weight: bold; margin-right: 1em;" },
-            folderTreeState.val?.name ?? "No folder",
-        ),
-        v.button(
-            {
-                onclick: openFolder,
-                title: "Refresh current folder",
-                style: "margin-right: 0.5em;",
-            },
-            "⟳",
-        ),
-        v.button(
-            {
-                onclick: openFolder,
-                title: "Open another folder",
-                style: "margin-right: 0.5em;",
-            },
-            "📁",
+        v.div(
+            { class: "flex w-full" },
+            v.span(
+                { class: "font-bold mx-1 flex-1" },
+                folderTreeState.val?.name ?? "No folder",
+            ),
+            u.InlineButton(openFolder, "Refresh current folder", "⟳"),
+            u.InlineButton(openFolder, "Open another folder", "📁"),
         ),
         folderTreeState.val.children?.map(FsItemView) || [],
     );
@@ -56,7 +41,7 @@ const FsItemView = (tree: FolderTree): HTMLElement => {
     const isOpen = van.state(false);
     const children = () =>
         isOpen.val
-            ? v.div(tree.children?.map(FsItemView))
+            ? v.div({ class: "ml-4" }, tree.children?.map(FsItemView))
             : v.div({ ariaBusy: true });
     const folder = v.details(
         { ontoggle: () => (isOpen.val = folder.open) },

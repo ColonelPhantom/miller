@@ -12,7 +12,7 @@ async function openFolder() {
     folderTreeState.val = folderTree;
 }
 
-const FolderTreeView = () => {
+export const FolderTreeView = () => {
     if (!folderTreeState.val) {
         return v.div(
             { class: "text-center m-4" },
@@ -21,10 +21,11 @@ const FolderTreeView = () => {
         );
     }
     return v.div(
+        { class: "mx-1" },
         v.div(
             { class: "flex w-full" },
             v.span(
-                { class: "font-bold mx-1 flex-1" },
+                { class: "font-bold flex-1" },
                 folderTreeState.val?.name ?? "No folder",
             ),
             u.InlineButton(openFolder, "Refresh current folder", "⟳"),
@@ -37,20 +38,21 @@ const FolderTreeView = () => {
 // TODO: determine if lazy DOM creation is better or not.
 // Alternatively, investigate lazy FS traversal in main.
 const FsItemView = (tree: FolderTree): HTMLElement => {
-    if (tree.type === "file") return v.p(tree.name);
+    if (tree.type === "file") return v.p(v.span("📄"), tree.name);
     const isOpen = van.state(false);
     const children = () =>
         isOpen.val
-            ? v.div({ class: "ml-4" }, tree.children?.map(FsItemView))
+            ? v.ul({}, tree.children?.map(FsItemView))
             : v.div({ ariaBusy: true });
     const folder = v.details(
-        { ontoggle: () => (isOpen.val = folder.open) },
+        { class: "inline", ontoggle: () => (isOpen.val = folder.open) },
         v.summary(tree.name),
         children,
     );
 
-    return folder;
+    return v.div(
+        { class: "flex" },
+        v.span(() => (isOpen.val ? "📂" : "📁")),
+        folder,
+    );
 };
-
-// Mount the folder tree view to the nav
-van.add(document.querySelector("aside nav"), FolderTreeView);

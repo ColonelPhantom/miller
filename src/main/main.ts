@@ -1,5 +1,12 @@
 import { app, BrowserWindow, ipcMain } from "electron";
-import { handleOpenFolder } from "./fileOperations";
+import {
+    handleOpenFolder,
+    handleReadFile,
+    handleSaveFile,
+    // handleCreateFile,
+    getCurrentWorkspace,
+    getOpenedFiles,
+} from "./fileOperations";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 
@@ -44,6 +51,34 @@ app.whenReady().then(() => {
         const senderWindow = BrowserWindow.fromWebContents(event.sender);
         return await handleOpenFolder(senderWindow);
     });
+
+    // File operation handlers
+    ipcMain.handle("file:read", async (event, filePath?: string) => {
+        const senderWindow = BrowserWindow.fromWebContents(event.sender);
+        return await handleReadFile(senderWindow, filePath);
+    });
+
+    ipcMain.handle(
+        "file:save",
+        async (event, content: string, filePath?: string) => {
+            const senderWindow = BrowserWindow.fromWebContents(event.sender);
+            return await handleSaveFile(senderWindow, content, filePath);
+        },
+    );
+
+    // ipcMain.handle("file:create", async (event, fileName: string, content = '', directory?: string) => {
+    //     const senderWindow = BrowserWindow.fromWebContents(event.sender);
+    //     return await handleCreateFile(senderWindow, fileName, content, directory);
+    // });
+
+    ipcMain.handle("workspace:getCurrentInfo", () => {
+        return getCurrentWorkspace();
+    });
+
+    ipcMain.handle("workspace:getOpenedFiles", () => {
+        return getOpenedFiles();
+    });
+
     createWindow();
     if (process.platform === "darwin") {
         app.on("activate", function () {

@@ -12,7 +12,7 @@ const fixedHeightEditor = EditorView.theme({
         minWidth: "8em",
         flex: "none",
     },
-    ".cm-scroller": { overflow: "auto" },
+    ".cm-scroller": { overflow: "auto scroll" },
 });
 
 export class Editor {

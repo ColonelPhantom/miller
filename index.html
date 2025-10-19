@@ -7,23 +7,6 @@
         <link href="/src/app/index.css" rel="stylesheet" />
     </head>
     <body>
-        <div id="app" class="h-screen max-h-screen flex flex-col">
-            <header class="flex-none">
-                Miller code editor - welcome!
-                <button id="addEditor">Add Editor</button>
-            </header>
-            <div id="content" class="flex flex-1 min-h-0">
-                <aside
-                    class="flex-none resize-x overflow-x-hidden overflow-y-scroll w-3xs min-w-32"
-                >
-                    <nav></nav>
-                </aside>
-                <main
-                    id="editorGrid"
-                    class="flex flex-auto gap-4 overflow-x-auto"
-                ></main>
-            </div>
-            <script type="module" src="/src/app/renderer.ts"></script>
-        </div>
+        <script type="module" src="/src/app/renderer.ts"></script>
     </body>
 </html>

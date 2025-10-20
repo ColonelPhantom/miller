@@ -2,7 +2,7 @@ import van from "vanjs-core";
 import * as vanX from "vanjs-ext";
 const v = van.tags;
 
-import { Editor } from "./editor";
+import { OpenFile } from "./filestate";
 import * as u from "./utils";
 
 const EditorWrapper = (editor: any, del: any, k: any) =>
@@ -20,9 +20,10 @@ const editors = vanX.reactive([[]]);
 const currentTab = van.state(0);
 van.derive(() => console.log("Setting tab to", currentTab.val));
 
-export function addEditor() {
+export function addEditor(file: OpenFile) {
     console.log("Adding editor to tab ", currentTab.val, editors);
-    editors[currentTab.val].push(vanX.noreactive(new Editor()));
+    const editor = file.createEditor();
+    editors[currentTab.val].push(vanX.noreactive(editor));
 }
 export function addTab() {
     editors.push([]);

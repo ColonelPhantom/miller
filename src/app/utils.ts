@@ -11,7 +11,7 @@ export const InlineButton = (
 ) =>
     v.button(
         {
-            class: "bg-green-500 mx-1 w-[2em] flex-none",
+            class: "mx-1 w-[2em] flex-none",
             title,
             onclick,
         },

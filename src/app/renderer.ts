@@ -28,7 +28,3 @@ const app = v.div(
 );
 
 van.add(document.body, app);
-
-const file = new OpenFile({});
-addEditor(file);
-addEditor(file);

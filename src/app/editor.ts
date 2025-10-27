@@ -2,6 +2,9 @@ import { Transaction } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, undo, redo } from "@codemirror/commands";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { LanguageDescription } from "@codemirror/language";
+import { languages } from "@codemirror/language-data";
+import { StateEffect } from "@codemirror/state";
 
 import { OpenFile } from "./filestate";
 
@@ -54,6 +57,11 @@ export class Editor {
                 EditorView.lineWrapping,
             ],
         });
+        const language = LanguageDescription.matchFilename(languages, file.filePath)?.load().then((Lang) => {
+            let eff = StateEffect.appendConfig.of(Lang);
+            let tr = this.view.dispatch({effects: [eff]});
+        });
+
     }
 
     get dom() {

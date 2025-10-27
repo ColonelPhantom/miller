@@ -1,6 +1,8 @@
 import van from "vanjs-core";
 const v = van.tags;
 import type { FolderTree } from "../types/global";
+import { addEditor } from "./editorgrid";
+import { OpenFile } from "./filestate";
 
 import * as u from "./utils";
 
@@ -38,7 +40,15 @@ export const FolderTreeView = () => {
 // TODO: determine if lazy DOM creation is better or not.
 // Alternatively, investigate lazy FS traversal in main.
 const FsItemView = (tree: FolderTree): HTMLElement => {
-    if (tree.type === "file") return v.p(v.span("📄"), tree.name);
+    if (tree.type === "file")
+        return v.p(
+            {
+                onclick: async () =>
+                    addEditor(await OpenFile.openFile(tree.path)),
+            },
+            v.span("📄"),
+            tree.name,
+        );
     const isOpen = van.state(false);
     const children = () =>
         isOpen.val

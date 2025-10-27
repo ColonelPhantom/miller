@@ -25,8 +25,9 @@ export function addEditor(file: OpenFile) {
     const editor = file.createEditor();
     editors[currentTab.val].push(vanX.noreactive(editor));
 }
-export function addTab() {
-    editors.push([]);
+
+export function addTab(file?: OpenFile) {
+    editors.push(file ? [file] : []);
 }
 
 const TabHeader = (tab: any, del: any, k: any) =>

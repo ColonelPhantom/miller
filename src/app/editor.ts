@@ -8,7 +8,7 @@ import { OpenFile } from "./filestate";
 const fixedHeightEditor = EditorView.theme({
     "&": {
         height: "100%",
-        minHeight: "0px",
+        minHeight: "1em",
         resize: "horizontal",
         overflow: "auto",
         width: "600px",
@@ -17,6 +17,13 @@ const fixedHeightEditor = EditorView.theme({
         fontSize: "16px",
     },
     ".cm-scroller": { overflow: "auto scroll" },
+});
+
+const testTheme = EditorView.theme({
+    "&": {
+        width: "600px",
+        resize: "horizontal",
+    },
 });
 
 export class Editor {
@@ -40,7 +47,12 @@ export class Editor {
         this.view = new EditorView({
             doc: file.rootState.doc,
             dispatch: (trs) => this.dispatch(trs),
-            extensions: [oneDark, fixedHeightEditor, kmap],
+            extensions: [
+                oneDark,
+                fixedHeightEditor,
+                kmap,
+                EditorView.lineWrapping,
+            ],
         });
     }
 

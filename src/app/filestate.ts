@@ -3,6 +3,7 @@ import {
     EditorStateConfig,
     TransactionSpec,
     StateEffect,
+    Text,
 } from "@codemirror/state";
 import { history } from "@codemirror/commands";
 import { Editor } from "./editor";
@@ -13,6 +14,7 @@ export class OpenFile {
     filePath: string;
     editors: Editor[];
     rootState: EditorState;
+    lastSaved?: Text;
 
     constructor(cfg: EditorStateConfig) {
         this.filePath = null;
@@ -22,9 +24,13 @@ export class OpenFile {
         }).state;
     }
 
-    static async openFile(filePath?: string) {
+    static async openFile(filePath?: string): Promise<OpenFile> {
+        if (filePath && openFiles[filePath]) {
+            return openFiles[filePath];
+        }
         const { content, path } = await window.electronAPI.readFile(filePath);
         const file = new OpenFile({ doc: content });
+        file.lastSaved = file.rootState.doc;
         file.setPath(path);
         return file;
     }
@@ -41,6 +47,7 @@ export class OpenFile {
                 this.rootState.doc.toString(),
                 this.filePath,
             );
+            this.lastSaved = this.rootState.doc;
         } else {
             await this.saveAs();
         }
@@ -52,6 +59,7 @@ export class OpenFile {
             filePath,
         );
         this.setPath(path);
+        this.lastSaved = this.rootState.doc;
     }
 
     // Function to create and return a new EditorView for this file
@@ -62,8 +70,6 @@ export class OpenFile {
     }
 
     dispatch(trs: TransactionSpec, origin?: Editor) {
-        console.log("Dispatching trs", trs, "to", this.editors, "from", origin);
-        console.log(this.rootState);
         this.rootState = this.rootState.update(trs).state;
         if (origin) {
             const es = this.editors.filter((e) => e !== origin);
@@ -81,5 +87,9 @@ export class OpenFile {
             state: this.rootState,
             dispatch: (tr: TransactionSpec) => this.dispatch(tr),
         };
+    }
+
+    isDirty(): boolean {
+        return this.lastSaved !== this.rootState.doc;
     }
 }

@@ -43,6 +43,7 @@ const FsItemView = (tree: FolderTree): HTMLElement => {
     if (tree.type === "file")
         return v.p(
             {
+                class: "cursor-pointer hover:bg-gray-100",
                 onclick: async () =>
                     addEditor(await OpenFile.openFile(tree.path)),
             },
@@ -55,13 +56,16 @@ const FsItemView = (tree: FolderTree): HTMLElement => {
             ? v.ul({}, tree.children?.map(FsItemView))
             : v.div({ ariaBusy: true });
     const folder = v.details(
-        { class: "inline", ontoggle: () => (isOpen.val = folder.open) },
+        {
+            class: "flex-auto inline",
+            ontoggle: () => (isOpen.val = folder.open),
+        },
         v.summary(tree.name),
         children,
     );
 
     return v.div(
-        { class: "flex" },
+        { class: "cursor-pointer flex hover:bg-gray-100" },
         v.span(() => (isOpen.val ? "📂" : "📁")),
         folder,
     );

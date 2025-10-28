@@ -1,10 +1,26 @@
-import { Transaction } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
+import { Transaction, StateEffect } from "@codemirror/state";
+import {
+    EditorView,
+    keymap,
+    lineNumbers,
+    highlightSpecialChars,
+    highlightActiveLine,
+    highlightActiveLineGutter,
+    drawSelection,
+    dropCursor,
+    rectangularSelection,
+    crosshairCursor,
+} from "@codemirror/view";
 import { defaultKeymap, undo, redo } from "@codemirror/commands";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { LanguageDescription } from "@codemirror/language";
+import {
+    LanguageDescription,
+    foldGutter,
+    indentOnInput,
+    bracketMatching,
+} from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
-import { StateEffect } from "@codemirror/state";
+import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 
 import { OpenFile } from "./filestate";
 
@@ -44,6 +60,7 @@ export class Editor {
         this.file = file;
         const kmap = keymap.of([
             ...defaultKeymap,
+            ...searchKeymap,
             { key: "Mod-z", run: () => undo(file.target) },
             { key: "Mod-shift-z", run: () => redo(file.target) },
         ]);
@@ -55,13 +72,33 @@ export class Editor {
                 fixedHeightEditor,
                 kmap,
                 EditorView.lineWrapping,
+                lineNumbers(),
+                highlightSpecialChars(),
+                foldGutter(),
+                drawSelection(),
+                dropCursor(),
+                // allowMultipleSelections,
+                indentOnInput(),
+                bracketMatching(),
+                // closeBrackets,
+                // autocompletion,
+                rectangularSelection(),
+                crosshairCursor(),
+                highlightActiveLine(),
+                highlightActiveLineGutter(),
+                highlightSelectionMatches(),
+                // lintKeymap,
             ],
         });
-        const language = LanguageDescription.matchFilename(languages, file.filePath)?.load().then((Lang) => {
-            let eff = StateEffect.appendConfig.of(Lang);
-            let tr = this.view.dispatch({effects: [eff]});
-        });
-
+        const language = LanguageDescription.matchFilename(
+            languages,
+            file.filePath,
+        )
+            ?.load()
+            .then((Lang) => {
+                let eff = StateEffect.appendConfig.of(Lang);
+                let tr = this.view.dispatch({ effects: [eff] });
+            });
     }
 
     get dom() {

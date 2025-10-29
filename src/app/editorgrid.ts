@@ -24,6 +24,8 @@ export function addEditor(file: OpenFile) {
     console.log("Adding editor to tab ", currentTab.val, editors);
     const editor = file.createEditor();
     editors[currentTab.val].push(vanX.noreactive(editor));
+    editor.view.dom.scrollIntoView();
+    editor.view.focus();
 }
 
 export function addTab(file?: OpenFile) {

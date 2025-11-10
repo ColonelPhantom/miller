@@ -42,6 +42,7 @@ const fixedHeightEditor = EditorView.theme({
 export class Editor {
     view: EditorView;
     file: OpenFile;
+    deleteFn?: () => void;
 
     dispatch(tr: Transaction, inhibitSync = false) {
         this.view.update([tr]);
@@ -65,6 +66,7 @@ export class Editor {
                     return true;
                 },
             },
+            { key: "Mod-w", run: () => this.close() },
         ]);
         this.view = new EditorView({
             doc: file.rootState.val.doc,
@@ -102,5 +104,22 @@ export class Editor {
 
     get dom() {
         return this.view.dom;
+    }
+
+    focus() {
+        this.view.dom.scrollIntoView();
+        this.view.focus();
+    }
+
+    close() {
+        if (this.deleteFn) {
+            this.file.removeEditor(this, this.deleteFn);
+            return true;
+        }
+        return false;
+    }
+
+    setDeleteFunction(fn: () => void) {
+        this.deleteFn = fn;
     }
 }

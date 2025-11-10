@@ -74,7 +74,7 @@ export class OpenFile {
     }
 
     // Function to remove an editor and clean up if no more editors exist
-    async removeEditor(editor: Editor): Promise<boolean> {
+    async removeEditor(editor: Editor, callback: () => void) {
         const index = this.editors.indexOf(editor);
         if (index > -1) {
             this.editors.splice(index, 1);
@@ -86,7 +86,7 @@ export class OpenFile {
             if (!confirmed) {
                 // Re-add the editor if user cancelled
                 this.editors.push(editor);
-                return false;
+                return;
             }
         }
 
@@ -95,7 +95,7 @@ export class OpenFile {
             delete openFiles[this.filePath.val];
         }
 
-        return true;
+        callback();
     }
 
     // Function to confirm closing of dirty file

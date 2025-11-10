@@ -1,12 +1,20 @@
-import van from "vanjs-core";
+import van, { State } from "vanjs-core";
 import * as vanX from "vanjs-ext";
 const v = van.tags;
 
 import { OpenFile } from "./filestate";
 import * as u from "./utils";
+import { Editor } from "./editor";
 
-const EditorWrapper = (editor: any, del: any, k: any) =>
-    v.div(
+const EditorWrapper = (editor: State<Editor>, del: () => void, k: number) => {
+    // Set the delete function on the editor when it's created
+    van.derive(() => {
+        if (editor.val) {
+            editor.val.setDeleteFunction(del);
+        }
+    });
+
+    return v.div(
         { class: "flex flex-col" },
         v.div(
             { class: "flex" },
@@ -16,21 +24,11 @@ const EditorWrapper = (editor: any, del: any, k: any) =>
                     editor.val.file.filePath.val +
                     (editor.val.file.isDirty() ? "*" : ""),
             ),
-            u.InlineButton(
-                async () => {
-                    const canClose = await editor.val.file.removeEditor(
-                        editor.val,
-                    );
-                    if (canClose) {
-                        del();
-                    }
-                },
-                "Close",
-                "❌",
-            ),
+            u.InlineButton(() => editor.val.close(), "Close", "❌"),
         ),
         v.div({ class: "flex-auto h-4" }, editor.val.dom),
     );
+};
 
 const editors = vanX.reactive([[]]);
 const currentTab = van.state(0);
@@ -40,8 +38,7 @@ export function addEditor(file: OpenFile) {
     console.log("Adding editor to tab ", currentTab.val, editors);
     const editor = file.createEditor();
     editors[currentTab.val].push(vanX.noreactive(editor));
-    editor.view.dom.scrollIntoView();
-    editor.view.focus();
+    editor.focus();
 }
 
 export function addTab(file?: OpenFile) {

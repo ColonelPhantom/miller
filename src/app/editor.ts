@@ -18,6 +18,7 @@ import {
     foldGutter,
     indentOnInput,
     bracketMatching,
+    foldKeymap,
 } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
@@ -54,6 +55,7 @@ export class Editor {
         const kmap = keymap.of([
             ...defaultKeymap,
             ...searchKeymap,
+            ...foldKeymap,
             { key: "Mod-z", run: () => undo(file.target) },
             { key: "Mod-shift-z", run: () => redo(file.target) },
             {

@@ -63,9 +63,16 @@ export class Editor {
             ...searchKeymap,
             { key: "Mod-z", run: () => undo(file.target) },
             { key: "Mod-shift-z", run: () => redo(file.target) },
+            {
+                key: "Ctrl-s",
+                run: () => {
+                    file.saveFile();
+                    return true;
+                },
+            },
         ]);
         this.view = new EditorView({
-            doc: file.rootState.doc,
+            doc: file.rootState.val.doc,
             dispatch: (trs) => this.dispatch(trs),
             extensions: [
                 oneDark,
@@ -92,7 +99,7 @@ export class Editor {
         });
         const language = LanguageDescription.matchFilename(
             languages,
-            file.filePath,
+            file.filePath.val,
         )
             ?.load()
             .then((Lang) => {

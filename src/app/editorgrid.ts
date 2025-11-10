@@ -10,7 +10,12 @@ const EditorWrapper = (editor: any, del: any, k: any) =>
         { class: "flex flex-col" },
         v.div(
             { class: "flex" },
-            v.span({ class: "mx-1 flex-1" }, "Editor " + k),
+            v.span(
+                { class: "mx-1 flex-1" },
+                () =>
+                    editor.val.file.filePath.val +
+                    (editor.val.file.isDirty() ? "*" : ""),
+            ),
             u.InlineButton(del, "Close", "❌"),
         ),
         v.div({ class: "flex-auto h-4" }, editor.val.dom),

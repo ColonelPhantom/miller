@@ -4,6 +4,7 @@ import {
     TransactionSpec,
     StateEffect,
     Text,
+    Transaction,
 } from "@codemirror/state";
 import { history } from "@codemirror/commands";
 import { Editor } from "./editor";
@@ -74,14 +75,20 @@ export class OpenFile {
     }
 
     dispatch(trs: TransactionSpec, origin?: Editor) {
-        this.rootState.val = this.rootState.val.update(trs).state;
+        let transaction = this.rootState.val.update(trs);
+        this.rootState.val = transaction.state;
         if (origin) {
             const es = this.editors.filter((e) => e !== origin);
             es.forEach((e) => e.dispatch(e.view.state.update(trs), true));
         } else {
-            this.editors.forEach((e) =>
-                e.dispatch(e.view.state.update(trs), true),
-            );
+            this.editors.forEach((e) => {
+                let changes = transaction.changes;
+                let userEvent = transaction.annotation(Transaction.userEvent);
+                let annotations = userEvent
+                    ? [Transaction.userEvent.of(userEvent)]
+                    : [];
+                e.dispatch(e.view.state.update({ changes, annotations }), true);
+            });
         }
     }
 

@@ -8,8 +8,7 @@ import {
 } from "@codemirror/state";
 import { history } from "@codemirror/commands";
 import { Editor } from "./editor";
-import { State } from "vanjs-core";
-import van from "vanjs-core";
+import van, { State } from "vanjs-core";
 
 const openFiles: { [path: string]: OpenFile } = {};
 
@@ -75,16 +74,16 @@ export class OpenFile {
     }
 
     dispatch(trs: TransactionSpec, origin?: Editor) {
-        let transaction = this.rootState.val.update(trs);
+        const transaction = this.rootState.val.update(trs);
         this.rootState.val = transaction.state;
         if (origin) {
             const es = this.editors.filter((e) => e !== origin);
             es.forEach((e) => e.dispatch(e.view.state.update(trs), true));
         } else {
             this.editors.forEach((e) => {
-                let changes = transaction.changes;
-                let userEvent = transaction.annotation(Transaction.userEvent);
-                let annotations = userEvent
+                const changes = transaction.changes;
+                const userEvent = transaction.annotation(Transaction.userEvent);
+                const annotations = userEvent
                     ? [Transaction.userEvent.of(userEvent)]
                     : [];
                 e.dispatch(e.view.state.update({ changes, annotations }), true);

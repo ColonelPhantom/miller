@@ -38,13 +38,6 @@ const fixedHeightEditor = EditorView.theme({
     ".cm-scroller": { overflow: "auto scroll" },
 });
 
-const testTheme = EditorView.theme({
-    "&": {
-        width: "600px",
-        resize: "horizontal",
-    },
-});
-
 export class Editor {
     view: EditorView;
     file: OpenFile;
@@ -97,14 +90,11 @@ export class Editor {
                 // lintKeymap,
             ],
         });
-        const language = LanguageDescription.matchFilename(
-            languages,
-            file.filePath.val,
-        )
+        LanguageDescription.matchFilename(languages, file.filePath.val)
             ?.load()
             .then((Lang) => {
-                let eff = StateEffect.appendConfig.of(Lang);
-                let tr = this.view.dispatch({ effects: [eff] });
+                const eff = StateEffect.appendConfig.of(Lang);
+                this.view.dispatch({ effects: [eff] });
             });
     }
 

@@ -26,6 +26,7 @@ export class OpenFile {
                 effects: [StateEffect.appendConfig.of([history()])],
             }).state,
         );
+        this.lastSaved = van.state(this.rootState.val.doc);
     }
 
     static async openFile(filePath?: string): Promise<OpenFile> {
@@ -34,7 +35,6 @@ export class OpenFile {
         }
         const { content, path } = await window.electronAPI.readFile(filePath);
         const file = new OpenFile({ doc: content });
-        file.lastSaved = van.state(file.rootState.val.doc);
         file.setPath(path);
         return file;
     }
@@ -71,6 +71,53 @@ export class OpenFile {
         const editor = new Editor(this);
         this.editors.push(editor);
         return editor;
+    }
+
+    // Function to remove an editor and clean up if no more editors exist
+    async removeEditor(editor: Editor): Promise<boolean> {
+        const index = this.editors.indexOf(editor);
+        if (index > -1) {
+            this.editors.splice(index, 1);
+        }
+
+        // If this is the last editor and the file is dirty, confirm before closing
+        if (this.editors.length === 0 && this.isDirty()) {
+            const confirmed = await this.confirmClose();
+            if (!confirmed) {
+                // Re-add the editor if user cancelled
+                this.editors.push(editor);
+                return false;
+            }
+        }
+
+        // If no more editors, remove from openFiles dictionary
+        if (this.editors.length === 0) {
+            delete openFiles[this.filePath.val];
+        }
+
+        return true;
+    }
+
+    // Function to confirm closing of dirty file
+    private async confirmClose(): Promise<boolean> {
+        const fileName = this.filePath.val
+            ? this.filePath.val.split("/").pop()
+            : "untitled";
+        const message = `Do you want to save the changes to ${fileName}?`;
+        const result = await window.electronAPI.showConfirmDialog(
+            message,
+            "Save Changes?",
+            ["Save", "Don't Save", "Cancel"],
+        );
+
+        if (result === "Save") {
+            await this.saveFile();
+            return true;
+        } else if (result === "Don't Save") {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     dispatch(trs: TransactionSpec, origin?: Editor) {

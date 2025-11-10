@@ -278,3 +278,20 @@ export function getCurrentWorkspace(): { root: string | null } {
 export function getOpenedFiles(): string[] {
     return Array.from(openedFiles);
 }
+
+// Show confirmation dialog
+export async function showConfirmDialog(
+    mainWindow: BrowserWindow,
+    message: string,
+    title: string,
+    buttons: string[] = ["OK", "Cancel"],
+): Promise<string> {
+    const result = await dialog.showMessageBox(mainWindow, {
+        type: "question",
+        buttons,
+        defaultId: 0,
+        title,
+        message,
+    });
+    return buttons[result.response];
+}

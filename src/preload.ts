@@ -35,4 +35,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     getOpenedFiles: () =>
         ipcRenderer.invoke("workspace:getOpenedFiles") as Promise<string[]>,
+
+    showConfirmDialog: (message: string, title: string, buttons: string[]) =>
+        ipcRenderer.invoke(
+            "dialog:confirm",
+            message,
+            title,
+            buttons,
+        ) as Promise<string>,
 });

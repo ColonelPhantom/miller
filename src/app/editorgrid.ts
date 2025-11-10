@@ -16,7 +16,18 @@ const EditorWrapper = (editor: any, del: any, k: any) =>
                     editor.val.file.filePath.val +
                     (editor.val.file.isDirty() ? "*" : ""),
             ),
-            u.InlineButton(del, "Close", "❌"),
+            u.InlineButton(
+                async () => {
+                    const canClose = await editor.val.file.removeEditor(
+                        editor.val,
+                    );
+                    if (canClose) {
+                        del();
+                    }
+                },
+                "Close",
+                "❌",
+            ),
         ),
         v.div({ class: "flex-auto h-4" }, editor.val.dom),
     );

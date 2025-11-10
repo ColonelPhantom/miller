@@ -6,6 +6,7 @@ import {
     // handleCreateFile,
     getCurrentWorkspace,
     getOpenedFiles,
+    showConfirmDialog,
 } from "./fileOperations";
 import path from "node:path";
 import started from "electron-squirrel-startup";
@@ -78,6 +79,19 @@ app.whenReady().then(() => {
     ipcMain.handle("workspace:getOpenedFiles", () => {
         return getOpenedFiles();
     });
+
+    ipcMain.handle(
+        "dialog:confirm",
+        async (event, message: string, title: string, buttons: string[]) => {
+            const senderWindow = BrowserWindow.fromWebContents(event.sender);
+            return await showConfirmDialog(
+                senderWindow,
+                message,
+                title,
+                buttons,
+            );
+        },
+    );
 
     createWindow();
     if (process.platform === "darwin") {

@@ -27,6 +27,13 @@ declare global {
             // Workspace info
             getCurrentWorkspace: () => Promise<{ root: string | null }>;
             getOpenedFiles: () => Promise<string[]>;
+
+            // Dialog operations
+            showConfirmDialog: (
+                message: string,
+                title: string,
+                buttons: string[],
+            ) => Promise<string>;
         };
     }
 }

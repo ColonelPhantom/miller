@@ -45,7 +45,7 @@ export function addTab(file?: OpenFile) {
     editors.push(file ? [file] : []);
 }
 
-const TabHeader = (tab: any, del: any, k: any) =>
+const TabHeader = (tab: State<Editor[]>, del: () => void, k: number) =>
     v.div(
         {
             class: () =>
@@ -55,7 +55,7 @@ const TabHeader = (tab: any, del: any, k: any) =>
         v.span({ class: "mx-1 flex-1" }, "Tab " + k),
         u.InlineButton(del, "Close", "❌"),
     );
-const EditorGrid = (tab: any, del: any, k: any) => {
+const EditorGrid = (tab: State<Editor[]>, del: () => void, k: number) => {
     console.log("Rendering", tab.val, "with key", k);
     const main = v.main({
         class: "flex flex-auto gap-4 overflow-x-auto min-width-4",

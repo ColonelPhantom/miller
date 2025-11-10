@@ -45,6 +45,7 @@
         "prettier": "^3.6.2",
         "tailwindcss": "^4.1.17",
         "typescript": "~5.9.3",
+        "typescript-eslint": "^8.46.3",
         "vanjs-core": "^1.6.0",
         "vanjs-ext": "^0.6.3",
         "vite": "^7.2.2"

@@ -28,6 +28,9 @@ const createWindow = () => {
     // and load the index.html of the app.
     if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
         mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+
+        // Open the DevTools only in dev mode
+        mainWindow.webContents.openDevTools();
     } else {
         mainWindow.loadFile(
             path.join(
@@ -36,9 +39,6 @@ const createWindow = () => {
             ),
         );
     }
-
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished

@@ -1,4 +1,9 @@
-import { Transaction, StateEffect } from "@codemirror/state";
+import {
+    Transaction,
+    StateEffect,
+    Compartment,
+    Extension,
+} from "@codemirror/state";
 import {
     EditorView,
     keymap,
@@ -44,6 +49,8 @@ export class Editor {
     file: OpenFile;
     deleteFn?: () => void;
 
+    private wordWrapCompartment = new Compartment();
+
     dispatch(tr: Transaction, inhibitSync = false) {
         this.view.update([tr]);
         if (!inhibitSync) {
@@ -67,6 +74,16 @@ export class Editor {
                 },
             },
             { key: "Mod-w", run: () => this.close() },
+            {
+                key: "Alt-z",
+                run: () => {
+                    this.toggleExt(
+                        this.wordWrapCompartment,
+                        EditorView.lineWrapping,
+                    );
+                    return true;
+                },
+            },
         ]);
         this.view = new EditorView({
             doc: file.rootState.val.doc,
@@ -75,7 +92,7 @@ export class Editor {
                 oneDark,
                 fixedHeightEditor,
                 kmap,
-                EditorView.lineWrapping,
+                this.wordWrapCompartment.of(EditorView.lineWrapping),
                 lineNumbers(),
                 highlightSpecialChars(),
                 foldGutter(),
@@ -117,6 +134,13 @@ export class Editor {
             return true;
         }
         return false;
+    }
+
+    toggleExt(compartment: Compartment, extension: Extension) {
+        const on = compartment.get(this.view.state) == extension;
+        this.view.dispatch({
+            effects: compartment.reconfigure(on ? [] : extension),
+        });
     }
 
     setDeleteFunction(fn: () => void) {

@@ -3,6 +3,7 @@ import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
+import { MakerFlatpak } from "@electron-forge/maker-flatpak";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
@@ -10,13 +11,15 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 const config: ForgeConfig = {
     packagerConfig: {
         asar: true,
+        icon: "res/icon",
+        extraResource: "res",
     },
     rebuildConfig: {},
     makers: [
         new MakerSquirrel({}),
         new MakerZIP({}),
-        // new MakerRpm({}),
-        // new MakerDeb({}),
+        new MakerRpm({ options: { icon: "res/icon.png" } }),
+        new MakerDeb({ options: { icon: "res/icon.png" } }),
     ],
     plugins: [
         new VitePlugin({

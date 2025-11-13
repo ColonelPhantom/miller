@@ -12,7 +12,7 @@ const config: ForgeConfig = {
     packagerConfig: {
         asar: true,
         icon: "res/icon",
-        extraResource: "res",
+        extraResource: "res/icon.png",
     },
     rebuildConfig: {},
     makers: [

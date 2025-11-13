@@ -40,13 +40,14 @@ export class OpenFile {
     }
 
     private setPath(path: string) {
-        delete openFiles[this.filePath?.val];
+        delete openFiles[this.filePath.val];
         this.filePath.val = path;
         openFiles[path] = this;
+        // TODO: what if openFiles[path] already exists?
     }
 
     async saveFile() {
-        if (this.filePath) {
+        if (this.filePath.val) {
             await window.electronAPI.saveFile(
                 this.rootState.val.doc.toString(),
                 this.filePath.val,

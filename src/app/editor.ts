@@ -1,9 +1,4 @@
-import {
-    Transaction,
-    StateEffect,
-    Compartment,
-    Extension,
-} from "@codemirror/state";
+import { Transaction, Compartment, Extension } from "@codemirror/state";
 import {
     EditorView,
     keymap,
@@ -27,8 +22,10 @@ import {
 } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
+import van from "vanjs-core";
 
 import { OpenFile } from "./filestate";
+import { Displayable } from "./editorgrid";
 
 const fixedHeightEditor = EditorView.theme({
     "&": {
@@ -44,12 +41,13 @@ const fixedHeightEditor = EditorView.theme({
     ".cm-scroller": { overflow: "auto scroll" },
 });
 
-export class Editor {
+export class Editor implements Displayable {
     view: EditorView;
     file: OpenFile;
     deleteFn?: () => void;
 
     private wordWrapCompartment = new Compartment();
+    private languageCompartment = new Compartment();
 
     dispatch(tr: Transaction, inhibitSync = false) {
         this.view.update([tr]);
@@ -95,6 +93,7 @@ export class Editor {
                 fixedHeightEditor,
                 kmap,
                 this.wordWrapCompartment.of(EditorView.lineWrapping),
+                this.languageCompartment.of([]),
                 lineNumbers(),
                 highlightSpecialChars(),
                 foldGutter(),
@@ -113,12 +112,16 @@ export class Editor {
                 // lintKeymap,
             ],
         });
-        LanguageDescription.matchFilename(languages, file.filePath.val)
-            ?.load()
-            .then((Lang) => {
-                const eff = StateEffect.appendConfig.of(Lang);
-                this.view.dispatch({ effects: [eff] });
-            });
+
+        van.derive(() => {
+            LanguageDescription.matchFilename(languages, file.filePath.val)
+                ?.load()
+                .then((Lang) => {
+                    // const eff = StateEffect.appendConfig.of(Lang);
+                    const eff = this.languageCompartment.reconfigure(Lang);
+                    this.view.dispatch({ effects: [eff] });
+                });
+        });
     }
 
     get dom() {
@@ -130,9 +133,13 @@ export class Editor {
         this.view.focus();
     }
 
+    title(): string {
+        return this.file.filePath.val + (this.file.isDirty() ? "*" : "");
+    }
+
     changeWidth(increment: number) {
         const w = parseInt(window.getComputedStyle(this.view.dom).width, 10);
-        this.view.dom.style.width = (w + increment) + 'px';
+        this.view.dom.style.width = w + increment + "px";
         return true;
     }
 

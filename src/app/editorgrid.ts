@@ -6,7 +6,18 @@ import { OpenFile } from "./filestate";
 import * as u from "./utils";
 import { Editor } from "./editor";
 
-const EditorWrapper = (editor: State<Editor>, del: () => void, k: number) => {
+export interface Displayable {
+    setDeleteFunction(del: () => void): void;
+    title(): string;
+    close(): void;
+    dom: HTMLElement;
+}
+
+const EditorWrapper = (
+    editor: State<Displayable>,
+    del: () => void,
+    k: number,
+) => {
     // Set the delete function on the editor when it's created
     van.derive(() => {
         if (editor.val) {
@@ -18,12 +29,7 @@ const EditorWrapper = (editor: State<Editor>, del: () => void, k: number) => {
         { class: "flex flex-col" },
         v.div(
             { class: "flex" },
-            v.span(
-                { class: "mx-1 flex-1" },
-                () =>
-                    editor.val.file.filePath.val +
-                    (editor.val.file.isDirty() ? "*" : ""),
-            ),
+            v.span({ class: "mx-1 flex-1" }, () => editor.val.title()),
             u.InlineButton(() => editor.val.close(), "Close", "❌"),
         ),
         v.div({ class: "flex-auto h-4" }, editor.val.dom),
@@ -55,6 +61,7 @@ const TabHeader = (tab: State<Editor[]>, del: () => void, k: number) =>
         v.span({ class: "mx-1 flex-1" }, "Tab " + k),
         u.InlineButton(del, "Close", "❌"),
     );
+
 const EditorGrid = (tab: State<Editor[]>, del: () => void, k: number) => {
     console.log("Rendering", tab.val, "with key", k);
     const main = v.main({
@@ -64,12 +71,15 @@ const EditorGrid = (tab: State<Editor[]>, del: () => void, k: number) => {
     vanX.list(main, tab.val, EditorWrapper);
     return main;
 };
+
 const TabBar = v.div({ class: "flex-none flex" });
+
 export const EditorTabs = v.div(
     {
         class: "flex flex-col flex-auto min-w-4",
     },
     TabBar,
 );
+
 vanX.list(TabBar, editors, TabHeader);
 vanX.list(EditorTabs, editors, EditorGrid);

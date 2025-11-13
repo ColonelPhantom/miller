@@ -84,6 +84,8 @@ export class Editor {
                     return true;
                 },
             },
+            { key: "Alt--", run: () => this.changeWidth(-100) },
+            { key: "Alt-=", run: () => this.changeWidth(100) },
         ]);
         this.view = new EditorView({
             doc: file.rootState.val.doc,
@@ -126,6 +128,12 @@ export class Editor {
     focus() {
         this.view.dom.scrollIntoView();
         this.view.focus();
+    }
+
+    changeWidth(increment: number) {
+        const w = parseInt(window.getComputedStyle(this.view.dom).width, 10);
+        this.view.dom.style.width = (w + increment) + 'px';
+        return true;
     }
 
     close() {

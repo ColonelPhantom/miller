@@ -76,19 +76,18 @@ export class OpenFile {
     // Function to remove an editor and clean up if no more editors exist
     async removeEditor(editor: Editor, callback: () => void) {
         const index = this.editors.indexOf(editor);
-        if (index > -1) {
-            this.editors.splice(index, 1);
-        }
+        if (index == -1) return;
 
         // If this is the last editor and the file is dirty, confirm before closing
-        if (this.editors.length === 0 && this.isDirty()) {
+        if (this.editors.length === 1 && this.isDirty()) {
             const confirmed = await this.confirmClose();
             if (!confirmed) {
-                // Re-add the editor if user cancelled
-                this.editors.push(editor);
                 return;
             }
         }
+
+        // Remove the editor from the list
+        this.editors.splice(index, 1);
 
         // If no more editors, remove from openFiles dictionary
         if (this.editors.length === 0) {

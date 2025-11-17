@@ -5,6 +5,7 @@ const v = van.tags;
 import { OpenFile } from "./filestate";
 import * as u from "./utils";
 import { Editor } from "./editor";
+import { Terminal } from "./terminal";
 
 export interface Displayable {
     setDeleteFunction(del: () => void): void;
@@ -51,6 +52,13 @@ export function addTab(file?: OpenFile) {
     editors.push(file ? [file] : []);
 }
 
+export function addTerminal() {
+    console.log("Adding terminal");
+    const term = new Terminal();
+    editors[currentTab.val].push(vanX.noreactive(term));
+    term.focus();
+}
+
 const TabHeader = (tab: State<Editor[]>, del: () => void, k: number) =>
     v.div(
         {
@@ -83,3 +91,10 @@ export const EditorTabs = v.div(
 
 vanX.list(TabBar, editors, TabHeader);
 vanX.list(EditorTabs, editors, EditorGrid);
+
+document.addEventListener("keyup", (e) => {
+    if (e.key === "t" && e.altKey) {
+        console.log("Opening terminal");
+        addTerminal();
+    }
+});

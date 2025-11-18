@@ -1,12 +1,12 @@
 import { Displayable } from "./editorgrid";
 import * as xterm from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import van from "vanjs-core";
+import van, { State } from "vanjs-core";
 const v = van.tags;
 
 export class Terminal implements Displayable {
     term: xterm.Terminal;
-    currentTitle: string = "Terminal";
+    currentTitle: State<string> = van.state("Terminal");
     del: () => void;
     dom: HTMLElement;
     private terminalId: string | null = null;
@@ -20,7 +20,7 @@ export class Terminal implements Displayable {
     }
 
     title(): string {
-        return this.currentTitle;
+        return this.currentTitle.val;
     }
 
     constructor() {
@@ -59,10 +59,13 @@ export class Terminal implements Displayable {
 
             this.unsubTerminalExit = window.electronAPI.onTerminalExit(
                 this.terminalId,
-                (exitCode) =>
+                (exitCode) => {
                     this.term.writeln(
-                        `\r\n[Process exited with code ${exitCode}]`,
-                    ),
+                        `\r\n[Process exited with code ${exitCode}]\n"Press any key to close..."`,
+                    );
+
+                    this.term.onData(() => this.close());
+                },
             );
 
             // Handle user input
@@ -71,6 +74,8 @@ export class Terminal implements Displayable {
                     window.electronAPI.writeToTerminal(this.terminalId, data);
                 }
             });
+
+            this.term.onTitleChange((title) => (this.currentTitle.val = title));
 
             // Set up resize handling
             this.resizeObserver = new ResizeObserver(() => {

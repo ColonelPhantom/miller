@@ -8,8 +8,10 @@ import {
     getOpenedFiles,
     showConfirmDialog,
 } from "./fileOperations";
+import { terminalManager } from "./pty";
 import path from "node:path";
 import started from "electron-squirrel-startup";
+/// <reference types="./forge-vite-env.d.ts" />
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -93,6 +95,32 @@ app.whenReady().then(() => {
             );
         },
     );
+
+    // Terminal handlers
+    ipcMain.handle(
+        "terminal:create",
+        async (event, shell?: string, args?: string[]) => {
+            return terminalManager.createTerminal(event, shell, args);
+        },
+    );
+
+    ipcMain.handle(
+        "terminal:resize",
+        async (event, id: string, cols: number, rows: number) => {
+            return terminalManager.resizeTerminal(id, cols, rows);
+        },
+    );
+
+    ipcMain.handle(
+        "terminal:write",
+        async (event, id: string, data: string) => {
+            return terminalManager.writeToTerminal(id, data);
+        },
+    );
+
+    ipcMain.handle("terminal:close", async (event, id: string) => {
+        return terminalManager.closeTerminal(id);
+    });
 
     createWindow();
     if (process.platform === "darwin") {

@@ -34,6 +34,28 @@ declare global {
                 title: string,
                 buttons: string[],
             ) => Promise<string>;
+
+            // Terminal operations
+            createTerminal: (
+                shell?: string,
+                args?: string[],
+            ) => Promise<string>;
+            resizeTerminal: (
+                id: string,
+                cols: number,
+                rows: number,
+            ) => Promise<boolean>;
+            writeToTerminal: (id: string, data: string) => Promise<boolean>;
+            closeTerminal: (id: string) => Promise<boolean>;
+            onTerminalData: (
+                id: string,
+                callback: (data: string) => void,
+            ) => () => void;
+            onTerminalExit: (
+                id: string,
+                callback: (exitCode: number) => void,
+            ) => () => void;
+            removeAllTerminalListeners: () => void;
         };
     }
 }

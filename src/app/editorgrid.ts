@@ -94,7 +94,6 @@ vanX.list(EditorTabs, editors, EditorGrid);
 
 document.addEventListener("keyup", (e) => {
     if (e.key === "t" && e.altKey) {
-        console.log("Opening terminal");
         addTerminal();
     }
 });

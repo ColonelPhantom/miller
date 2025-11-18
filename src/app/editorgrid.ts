@@ -39,10 +39,8 @@ const EditorWrapper = (
 
 const editors = vanX.reactive([[]]);
 const currentTab = van.state(0);
-van.derive(() => console.log("Setting tab to", currentTab.val));
 
 export function addEditor(file: OpenFile) {
-    console.log("Adding editor to tab ", currentTab.val, editors);
     const editor = file.createEditor();
     editors[currentTab.val].push(vanX.noreactive(editor));
     editor.focus();
@@ -53,7 +51,6 @@ export function addTab(file?: OpenFile) {
 }
 
 export function addTerminal() {
-    console.log("Adding terminal");
     const term = new Terminal();
     editors[currentTab.val].push(vanX.noreactive(term));
     term.focus();
@@ -71,7 +68,6 @@ const TabHeader = (tab: State<Editor[]>, del: () => void, k: number) =>
     );
 
 const EditorGrid = (tab: State<Editor[]>, del: () => void, k: number) => {
-    console.log("Rendering", tab.val, "with key", k);
     const main = v.main({
         class: "flex flex-auto gap-4 overflow-x-auto min-width-4",
         hidden: () => k !== currentTab.val,

@@ -139,7 +139,6 @@ export class OpenFile {
     }
 
     get target() {
-        console.log("Getting target");
         return {
             state: this.rootState.val,
             dispatch: (tr: TransactionSpec) => this.dispatch(tr),

@@ -33,7 +33,6 @@ export class TerminalManager {
         };
 
         ptyProcess.onData((data) => {
-            console.log(`Terminal ${id} data:`, data);
             event.sender.send("terminal:data", id, data);
         });
 

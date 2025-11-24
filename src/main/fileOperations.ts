@@ -6,6 +6,8 @@ import fs from "fs";
 const fsp = fs.promises;
 import path from "path";
 
+import * as chokidar from "chokidar";
+
 type FolderTree = {
     name: string;
     path: string;
@@ -15,6 +17,7 @@ type FolderTree = {
 
 // Track the currently opened folder for security checks
 let currentWorkspaceRoot: string | null = null;
+let watcher: chokidar.FSWatcher | null = null;
 
 // Track previously opened files outside the workspace
 const openedFiles = new Set<string>();
@@ -55,6 +58,13 @@ export async function handleOpenFolder(
     if (!result.canceled && result.filePaths.length > 0) {
         const folderPath = result.filePaths[0];
         currentWorkspaceRoot = folderPath; // Track the opened folder
+        watcher = chokidar.watch(folderPath, {
+            ignoreInitial: true,
+        });
+        watcher.on("all", (event, path) => {
+            console.log("chokidar", event, path);
+        });
+
         return {
             name: path.basename(folderPath),
             path: folderPath,

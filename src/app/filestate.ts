@@ -13,10 +13,18 @@ import van, { State } from "vanjs-core";
 const openFiles: { [path: string]: OpenFile } = {};
 
 export class OpenFile {
+    // Helper: find an open file instance by path
+    static findOpenFile(path?: string): OpenFile | undefined {
+        if (!path) return undefined;
+        return openFiles[path];
+    }
     filePath: State<string>;
     editors: Editor[];
     rootState: State<EditorState>;
-    lastSaved?: State<Text>;
+    lastSaved: State<Text>;
+    expectedDiskContent: State<string | null>;
+    knownDiskContent: State<string | null>;
+    diskDiscrepancyMessage: State<string | null>;
 
     constructor(cfg: EditorStateConfig) {
         this.filePath = van.state(null);
@@ -27,6 +35,21 @@ export class OpenFile {
             }).state,
         );
         this.lastSaved = van.state(this.rootState.val.doc);
+        this.expectedDiskContent = van.state(null);
+        this.knownDiskContent = van.state(null);
+
+        this.diskDiscrepancyMessage = van.derive(() => {
+            const expected = this.expectedDiskContent.val;
+            const known = this.knownDiskContent.val;
+            if (known === null) {
+                return "File has been removed from disk.";
+            } else if (expected === null) {
+                return "File has been created on disk.";
+            } else if (expected !== known) {
+                return "File has been changed on disk.";
+            }
+            return null;
+        });
     }
 
     static async openFile(filePath?: string): Promise<OpenFile> {
@@ -35,12 +58,16 @@ export class OpenFile {
         }
         const { content, path } = await window.electronAPI.readFile(filePath);
         const file = new OpenFile({ doc: content });
+        file.expectedDiskContent.val = content;
+        file.knownDiskContent.val = content;
         file.setPath(path);
         return file;
     }
 
     private setPath(path: string) {
-        delete openFiles[this.filePath.val];
+        if (this.filePath.val) {
+            delete openFiles[this.filePath.val];
+        }
         this.filePath.val = path;
         openFiles[path] = this;
         // TODO: what if openFiles[path] already exists?
@@ -48,23 +75,21 @@ export class OpenFile {
 
     async saveFile() {
         if (this.filePath.val) {
-            await window.electronAPI.saveFile(
-                this.rootState.val.doc.toString(),
-                this.filePath.val,
-            );
+            const doc = this.rootState.val.doc.toString();
+            await window.electronAPI.saveFile(doc, this.filePath.val);
             this.lastSaved.val = this.rootState.val.doc;
+            this.expectedDiskContent.val = doc;
         } else {
             await this.saveAs();
         }
     }
 
     async saveAs(filePath?: string) {
-        const { path } = await window.electronAPI.saveFile(
-            this.rootState.val.doc.toString(),
-            filePath,
-        );
+        const doc = this.rootState.val.doc.toString();
+        const { path } = await window.electronAPI.saveFile(doc, filePath);
         this.setPath(path);
         this.lastSaved.val = this.rootState.val.doc;
+        this.expectedDiskContent.val = doc;
     }
 
     // Function to create and return a new EditorView for this file
@@ -103,6 +128,8 @@ export class OpenFile {
         const fileName = this.filePath.val
             ? this.filePath.val.split("/").pop()
             : "untitled";
+        // TODO: change message based on whether file exists on disk
+        // e.g. if it was removed or changed
         const message = `Do you want to save the changes to ${fileName}?`;
         const result = await window.electronAPI.showConfirmDialog(
             message,

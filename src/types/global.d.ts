@@ -27,6 +27,8 @@ declare global {
             // Workspace info
             getCurrentWorkspace: () => Promise<{ root: string | null }>;
             getOpenedFiles: () => Promise<string[]>;
+            // Get workspace tree without dialogs
+            getWorkspaceTree: () => Promise<FolderTree | null>;
 
             // Dialog operations
             showConfirmDialog: (
@@ -56,6 +58,10 @@ declare global {
                 callback: (exitCode: number) => void,
             ) => () => void;
             removeAllTerminalListeners: () => void;
+            // Filesystem events
+            onFsEvent: (
+                callback: (ev: { event: string; path: string }) => void,
+            ) => void;
         };
     }
 }

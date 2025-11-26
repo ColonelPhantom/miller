@@ -14,6 +14,48 @@ async function openFolder() {
     folderTreeState.val = folderTree;
 }
 
+// Refresh the current folder tree from main (re-open)
+async function refreshFolder() {
+    const folderTree = await window.electronAPI.getWorkspaceTree().catch(alert);
+    if (!folderTree) return;
+    folderTreeState.val = folderTree;
+}
+
+// Subscribe to filesystem events and refresh tree when directories change
+window.electronAPI.onFsEvent(async (ev: { event: string; path: string }) => {
+    // If no workspace is loaded ignore
+    if (!folderTreeState.val) return;
+    const workspaceRoot = folderTreeState.val.path;
+    if (!ev.path.startsWith(workspaceRoot)) return;
+
+    // For directory-level changes or create/unlink/rename, refresh the tree
+    if (
+        ev.event === "addDir" ||
+        ev.event === "unlinkDir" ||
+        ev.event === "add" ||
+        ev.event === "unlink"
+    ) {
+        // Debounce-ish: schedule a refresh
+        setTimeout(() => refreshFolder(), 50);
+    }
+
+    // If a file changed on disk and it's open, show disk version panels
+    if (ev.event === "change" || ev.event === "add" || ev.event === "unlink") {
+        const openFile = OpenFile.findOpenFile(ev.path);
+        if (!openFile) return;
+        // Read latest contents from disk
+        const data = await window.electronAPI
+            .readFile(ev.path)
+            .catch(() => null);
+        if (!data) return;
+        if (ev.event === "unlink") {
+            openFile.knownDiskContent.val = null;
+        } else {
+            openFile.knownDiskContent.val = data.content;
+        }
+    }
+});
+
 export const FolderTreeView = () => {
     if (!folderTreeState.val) {
         return v.div(

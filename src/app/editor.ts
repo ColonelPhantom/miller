@@ -1,4 +1,10 @@
-import { Transaction, Compartment, Extension } from "@codemirror/state";
+import {
+    Transaction,
+    Compartment,
+    Extension,
+    StateEffect,
+    StateField,
+} from "@codemirror/state";
 import {
     EditorView,
     keymap,
@@ -10,6 +16,7 @@ import {
     dropCursor,
     rectangularSelection,
     crosshairCursor,
+    showPanel,
 } from "@codemirror/view";
 import { defaultKeymap, undo, redo } from "@codemirror/commands";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -40,6 +47,29 @@ const fixedHeightEditor = EditorView.theme({
     },
     ".cm-scroller": { overflow: "auto scroll" },
 });
+
+const FileStatusEffect = StateEffect.define<string | null>();
+const FileStatusField = StateField.define<string | null>({
+    create: () => null,
+    update(value, tr): string | null {
+        for (const effect of tr.effects) {
+            if (effect.is(FileStatusEffect)) {
+                value = effect.value;
+            }
+        }
+        return value;
+    },
+    provide: (f) =>
+        showPanel.from(f, (state) => (state ? fileStatusPanel : null)),
+});
+
+function fileStatusPanel(view: EditorView) {
+    const dom = document.createElement("div");
+    dom.textContent = view.state.field(FileStatusField);
+    dom.style =
+        "padding: 2px 10px; font-size: 12px; color: white; background: #900;";
+    return { top: true, dom };
+}
 
 export class Editor implements Displayable {
     view: EditorView;
@@ -92,6 +122,8 @@ export class Editor implements Displayable {
                 oneDark,
                 fixedHeightEditor,
                 kmap,
+                FileStatusField,
+
                 this.wordWrapCompartment.of(EditorView.lineWrapping),
                 this.languageCompartment.of([]),
                 lineNumbers(),
@@ -121,6 +153,14 @@ export class Editor implements Displayable {
                     const eff = this.languageCompartment.reconfigure(Lang);
                     this.view.dispatch({ effects: [eff] });
                 });
+        });
+
+        van.derive(() => {
+            const effects = FileStatusEffect.of(
+                file.diskDiscrepancyMessage.val,
+            );
+            const tr = this.view.state.update({ effects });
+            this.dispatch(tr, true);
         });
     }
 

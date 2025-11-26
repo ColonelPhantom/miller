@@ -7,6 +7,7 @@ import {
     getCurrentWorkspace,
     getOpenedFiles,
     showConfirmDialog,
+    getWorkspaceTree,
 } from "./fileOperations";
 import { terminalManager } from "./pty";
 import path from "node:path";
@@ -81,6 +82,11 @@ app.whenReady().then(() => {
 
     ipcMain.handle("workspace:getOpenedFiles", () => {
         return getOpenedFiles();
+    });
+
+    // Return folder tree without showing dialogs
+    ipcMain.handle("workspace:getTree", async () => {
+        return await getWorkspaceTree();
     });
 
     ipcMain.handle(

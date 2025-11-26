@@ -19,6 +19,28 @@ type FolderTree = {
 let currentWorkspaceRoot: string | null = null;
 let watcher: chokidar.FSWatcher | null = null;
 
+// Helper to (re)create watcher and wire up IPC notifications to renderer
+function ensureWatcher() {
+    if (watcher) return watcher;
+    watcher = chokidar.watch([], { ignoreInitial: true });
+
+    watcher.on("all", (event, filePath) => {
+        console.log("chokidar", event, filePath);
+        // Broadcast to all renderer windows
+        try {
+            BrowserWindow.getAllWindows().forEach((w) =>
+                w.webContents.send("fs:event", { event, path: filePath }),
+            );
+        } catch (err) {
+            console.error("Failed to send fs:event to renderer:", err);
+        }
+    });
+
+    watcher.on("error", (err) => console.error("Watcher error:", err));
+
+    return watcher;
+}
+
 // Track previously opened files outside the workspace
 const openedFiles = new Set<string>();
 
@@ -58,12 +80,9 @@ export async function handleOpenFolder(
     if (!result.canceled && result.filePaths.length > 0) {
         const folderPath = result.filePaths[0];
         currentWorkspaceRoot = folderPath; // Track the opened folder
-        watcher = chokidar.watch(folderPath, {
-            ignoreInitial: true,
-        });
-        watcher.on("all", (event, path) => {
-            console.log("chokidar", event, path);
-        });
+        // Ensure watcher exists and add this folder to it
+        const w = ensureWatcher();
+        w.add(folderPath);
 
         return {
             name: path.basename(folderPath),
@@ -282,6 +301,17 @@ export async function handleSaveFile(
 // Utility function to get current workspace info
 export function getCurrentWorkspace(): { root: string | null } {
     return { root: currentWorkspaceRoot };
+}
+
+// Return a fresh FolderTree for the current workspace (no dialogs)
+export async function getWorkspaceTree(): Promise<FolderTree | null> {
+    if (!currentWorkspaceRoot) return null;
+    return {
+        name: path.basename(currentWorkspaceRoot),
+        path: currentWorkspaceRoot,
+        type: "directory",
+        children: await readTree(currentWorkspaceRoot),
+    };
 }
 
 // Utility function to get opened files (for debugging/info)

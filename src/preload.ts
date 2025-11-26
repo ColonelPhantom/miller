@@ -55,6 +55,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getOpenedFiles: () =>
         ipcRenderer.invoke("workspace:getOpenedFiles") as Promise<string[]>,
 
+    // Get the full workspace tree without triggering dialogs
+    getWorkspaceTree: () =>
+        ipcRenderer.invoke("workspace:getTree") as Promise<FolderTree | null>,
+
     showConfirmDialog: (message: string, title: string, buttons: string[]) =>
         ipcRenderer.invoke(
             "dialog:confirm",
@@ -90,5 +94,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
     onTerminalExit: (id: string, callback: (exitCode: number) => void) => {
         terminalExitCallbacks.set(id, callback);
         return () => terminalExitCallbacks.delete(id);
+    },
+
+    // FS events subscription
+    onFsEvent: (callback: (ev: { event: string; path: string }) => void) => {
+        ipcRenderer.on(
+            "fs:event",
+            (_ev, payload: { event: string; path: string }) => {
+                callback(payload);
+            },
+        );
     },
 });

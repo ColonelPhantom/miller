@@ -19,6 +19,10 @@ type FolderTree = {
 let currentWorkspaceRoot: string | null = null;
 let watcher: chokidar.FSWatcher | null = null;
 
+export function getCurrentWorkspaceRoot(): string | null {
+  return currentWorkspaceRoot;
+}
+
 // Helper to (re)create watcher and wire up IPC notifications to renderer
 function ensureWatcher() {
     if (watcher) return watcher;

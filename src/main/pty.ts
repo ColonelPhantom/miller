@@ -1,4 +1,5 @@
 import * as pty from "node-pty";
+import { getCurrentWorkspaceRoot } from "./fileOperations";
 
 export interface TerminalInstance {
     ptyProcess: pty.IPty;
@@ -24,7 +25,7 @@ export class TerminalManager {
             name: "xterm-color",
             cols: 80,
             rows: 24,
-            cwd: process.cwd(),
+            cwd: getCurrentWorkspaceRoot() || process.cwd(),
             env: process.env,
         });
 

@@ -61,7 +61,7 @@ export class Terminal implements Displayable {
                 this.terminalId,
                 (exitCode) => {
                     this.term.writeln(
-                        `\r\n[Process exited with code ${exitCode}]\n"Press any key to close..."`,
+                        `\r\n[Process exited with code ${exitCode}]\r\nPress any key to close...`,
                     );
 
                     this.term.onData(() => this.close());
@@ -108,6 +108,7 @@ export class Terminal implements Displayable {
     }
 
     focus() {
+        this.dom.scrollIntoView();
         this.term.focus();
     }
 

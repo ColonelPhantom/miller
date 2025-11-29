@@ -54,6 +54,9 @@ export function addTerminal() {
     const term = new Terminal();
     editors[currentTab.val].push(vanX.noreactive(term));
     term.focus();
+    setTimeout(() => {
+        term.focus();
+    }, 0);
 }
 
 const TabHeader = (tab: State<Editor[]>, del: () => void, k: number) =>

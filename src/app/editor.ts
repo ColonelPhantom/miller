@@ -44,6 +44,7 @@ const fixedHeightEditor = EditorView.theme({
         minWidth: "8em",
         flex: "none",
         fontSize: "16px",
+        scrollMargin: "100px",
     },
     ".cm-scroller": { overflow: "auto scroll" },
 });
@@ -144,6 +145,7 @@ export class Editor implements Displayable {
                 // lintKeymap,
             ],
         });
+        this.view.dom.addEventListener("focusin", () => this.focus());
 
         van.derive(() => {
             LanguageDescription.matchFilename(languages, file.filePath.val)
@@ -169,7 +171,7 @@ export class Editor implements Displayable {
     }
 
     focus() {
-        this.view.dom.scrollIntoView();
+        this.view.dom.scrollIntoView({ behavior: "smooth", });
         this.view.focus();
     }
 

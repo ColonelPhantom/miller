@@ -91,8 +91,15 @@ export const EditorTabs = v.div(
 vanX.list(TabBar, editors, TabHeader);
 vanX.list(EditorTabs, editors, EditorGrid);
 
-document.addEventListener("keyup", (e) => {
+function shortcutHandler(e: KeyboardEvent) {
     if (e.key === "t" && e.altKey) {
-        addTerminal();
+        if (e.type === "keydown") {
+            addTerminal();
+        }
+        e.preventDefault();
+
     }
-});
+}
+
+document.addEventListener("keyup", shortcutHandler, { capture: true, });
+document.addEventListener("keydown", shortcutHandler, { capture: true, });

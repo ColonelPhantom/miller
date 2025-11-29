@@ -13,6 +13,7 @@ const config: ForgeConfig = {
         asar: true,
         icon: "res/icon",
         extraResource: "res/icon.png",
+        ignore: ["dist", "src", "res",], // Workaround for https://github.com/electron/forge/issues/3738
     },
     rebuildConfig: {},
     makers: [

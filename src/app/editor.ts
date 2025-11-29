@@ -4,6 +4,7 @@ import {
     Extension,
     StateEffect,
     StateField,
+    EditorState,
 } from "@codemirror/state";
 import {
     EditorView,
@@ -28,6 +29,7 @@ import {
     foldKeymap,
 } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
+import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import van from "vanjs-core";
 
@@ -40,7 +42,7 @@ const fixedHeightEditor = EditorView.theme({
         minHeight: "1em",
         resize: "horizontal",
         overflow: "auto",
-        width: "600px",
+        width: "768px",
         minWidth: "8em",
         flex: "none",
         fontSize: "16px",
@@ -132,11 +134,11 @@ export class Editor implements Displayable {
                 foldGutter(),
                 drawSelection(),
                 dropCursor(),
-                // allowMultipleSelections,
+                EditorState.allowMultipleSelections.of(true),
                 indentOnInput(),
                 bracketMatching(),
-                // closeBrackets,
-                // autocompletion,
+                closeBrackets(),
+                autocompletion(),
                 rectangularSelection(),
                 crosshairCursor(),
                 highlightActiveLine(),

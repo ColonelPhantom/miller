@@ -33,7 +33,7 @@ export class Terminal implements Displayable {
         this.fitAddon = new FitAddon();
         this.term.loadAddon(this.fitAddon);
 
-        this.dom = v.div({ class: "h-full w-lg resize-x overflow-x-hidden scroll-m-[100px]" });
+        this.dom = v.div({ class: "h-full w-2xl resize-x overflow-x-hidden scroll-m-[100px]" });
         this.dom.addEventListener("focusin", () => this.focus());
 
         const loaded = van.state(false);

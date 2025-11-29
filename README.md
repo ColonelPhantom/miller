@@ -6,5 +6,6 @@ Its primary goal is to provide the user with a stack/column-based navigation his
 ## Features
 - [x] Basic file editing
 - [x] Terminal integration
-- [ ] File watching
+- [x] File watching (note: slow!)
+- [ ] Warn on exit when there are unsaved files
 - [ ] LSP support

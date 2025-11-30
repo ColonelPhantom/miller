@@ -105,4 +105,43 @@ contextBridge.exposeInMainWorld("electronAPI", {
             },
         );
     },
+
+    // LSP connect: request a MessagePort connected to a language server which
+    // is spawned in the main process. Returns a `MessagePort` that can be used
+    // for bidirectional communication (postMessage/onmessage).
+    connectLsp: async () => {
+        // Request the main process for a MessagePort. When it arrives we
+        // transfer it into the page (main world) using window.postMessage so
+        // the page can receive the actual MessagePort object (contextBridge
+        // does not allow direct transfer of MessagePort objects via return
+        // values).
+        return new Promise<void>((resolve, reject) => {
+            ipcRenderer.once("lsp:port", (event) => {
+                const ports = (event as any).ports as MessagePort[];
+                if (ports && ports.length > 0) {
+                    try {
+                        // Transfer port into the page context. The page must
+                        // listen for 'message' events and look for
+                        // `e.data.source === 'electron-lsp'` to receive the
+                        // port.
+                        (window as any).postMessage(
+                            { source: "electron-lsp" },
+                            "*",
+                            [ports[0]],
+                        );
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
+                } else {
+                    reject(new Error("No MessagePort received from main"));
+                }
+            });
+            try {
+                ipcRenderer.invoke("lsp:connect");
+            } catch (err) {
+                reject(err);
+            }
+        });
+    },
 });

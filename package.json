@@ -2,7 +2,7 @@
     "name": "miller",
     "productName": "miller",
     "version": "0.1.0",
-    "description": "My Electron application description",
+    "description": "Column-based code editor",
     "main": ".vite/build/main.js",
     "scripts": {
         "start": "electron-forge start",
@@ -17,7 +17,7 @@
         "name": "Quinten Kock",
         "email": "quinten@quinten.space"
     },
-    "license": "MIT",
+    "license": "GPL-3.0-or-later",
     "devDependencies": {
         "@codemirror/language-data": "^6.5.2",
         "@codemirror/theme-one-dark": "^6.1.3",

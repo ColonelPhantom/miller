@@ -19,6 +19,8 @@ if (started) {
     app.quit();
 }
 
+app.setName("miller");
+
 const createWindow = () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({

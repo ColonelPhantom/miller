@@ -14,13 +14,16 @@ const config: ForgeConfig = {
         icon: "res/icon",
         extraResource: "res/icon.png",
         ignore: ["dist", "src", "res",], // Workaround for https://github.com/electron/forge/issues/3738
+        executableName: "miller",
+        appCategoryType: 'public.app-category.developer-tools',
+        name: "Miller",
     },
     rebuildConfig: {},
     makers: [
         new MakerSquirrel({}),
         new MakerZIP({}),
-        new MakerRpm({ options: { icon: "res/icon.png" } }),
-        new MakerDeb({ options: { icon: "res/icon.png" } }),
+        new MakerRpm({ options: { icon: "res/icon.png", categories: ["Development"] } }),
+        new MakerDeb({ options: { icon: "res/icon.png", categories: ["Development"] } }),
     ],
     plugins: [
         new VitePlugin({

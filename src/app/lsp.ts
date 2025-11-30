@@ -3,6 +3,8 @@
 
 import { Extension } from "@codemirror/state";
 
+import { LSPClient, languageServerExtensions } from "@codemirror/lsp-client";
+
 // Create a very small MessagePort-based transport implementation
 // compatible with @codemirror/lsp-client's expected Transport interface.
 async function simpleMessagePortTransport(port: MessagePort) {
@@ -15,11 +17,8 @@ async function simpleMessagePortTransport(port: MessagePort) {
     };
     port.addEventListener("message", onMessage);
     // The port must be started to begin receiving messages
-    try {
-        port.start();
-    } catch (err) {
-        // Some environments don't require explicit start()
-    }
+    port.start();
+
     return {
         send(message: string) {
             try {
@@ -45,7 +44,7 @@ function filePathToUri(path: string) {
         const u = new URL("file://" + path);
         return u.toString();
     } catch (err) {
-        // Fallback: naive replacement
+        console.warn("Failed to convert file path to URI via URL:", err);
         return "file://" + path;
     }
 }
@@ -57,24 +56,6 @@ export async function createLspExtension(
     filePath?: string,
 ): Promise<Extension> {
     if (!filePath) return [];
-
-    // Dynamic import so projects without the dependency won't fail at module
-    // load time. This also makes the LSP code optional at runtime.
-    let mod: any;
-    try {
-        // @ts-ignore - the lsp client is optional at runtime; avoid hard
-        // compile-time failures if it's not installed in all environments.
-        mod = await import("@codemirror/lsp-client");
-    } catch (err) {
-        console.warn("@codemirror/lsp-client not available:", err);
-        return [];
-    }
-
-    const { LSPClient, languageServerExtensions } = mod as any;
-    if (!LSPClient) {
-        console.warn("@codemirror/lsp-client did not export LSPClient");
-        return [];
-    }
 
     // Try to establish a transport via main process MessagePort. This will
     // cause main to spawn (or reuse) an LSP server and hand us a MessagePort
@@ -121,33 +102,37 @@ export async function createLspExtension(
         // directory containing the file.
         let rootUri: string | undefined = undefined;
         try {
-            const ws = await (window as any).electronAPI.getCurrentWorkspace();
+            const ws = await window.electronAPI.getCurrentWorkspace();
             if (ws && ws.root) rootUri = filePathToUri(ws.root);
         } catch (e) {
             // ignore and fall back
+            console.warn("Failed to get workspace root from main process:", e);
         }
         if (!rootUri) {
             try {
                 const dir = filePath.replace(/\/[^\/]*$/, "");
                 rootUri = filePathToUri(dir);
             } catch (e) {
-                // ignore
+                console.warn("Failed to convert file path to URI via URL:", e);
             }
         }
 
         const client = new LSPClient({
             extensions: languageServerExtensions(),
             rootUri: rootUri,
-        } as any);
+        });
+        console.log("LSP client created with extensions:", client);
         // Pass a client/connection config containing the rootUri. The librar
         // accepts a config object; we use `as any` to avoid TS errors here.
-        const conn = client.connect(transport);
+        client.connect(transport);
+
+        await client.initializing;
 
         // The client exposes a `plugin` method which yields an extension that
         // wires up autocompletion, diagnostics, and other LSP features for a
         // given URI. We convert the local path to a file:// URI.
         const uri = filePathToUri(filePath);
-        return conn.plugin(uri);
+        return client.plugin(uri);
     } catch (err) {
         console.warn("Failed to create LSP client plugin:", err);
         return [];

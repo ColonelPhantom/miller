@@ -27,6 +27,7 @@ import {
     indentOnInput,
     bracketMatching,
     foldKeymap,
+    indentUnit,
 } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
@@ -144,6 +145,7 @@ export class Editor implements Displayable {
                 highlightActiveLine(),
                 highlightActiveLineGutter(),
                 highlightSelectionMatches(),
+                indentUnit.of("    "),
                 // lintKeymap,
             ],
         });

@@ -6,14 +6,7 @@ import { OpenFile } from "./filestate";
 import * as u from "./utils";
 import { Editor } from "./editor";
 import { Terminal } from "./terminal";
-
-export interface Displayable {
-    setDeleteFunction(del: () => void): void;
-    title(): string;
-    close(): void;
-    focus(): void;
-    dom: HTMLElement;
-}
+import { Displayable } from "./displayable";
 
 const EditorWrapper = (
     editor: State<Displayable>,

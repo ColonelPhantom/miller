@@ -1,13 +1,12 @@
-import { Displayable } from "./editorgrid";
+import { Displayable } from "./displayable";
 import * as xterm from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import van, { State } from "vanjs-core";
 const v = van.tags;
 
-export class Terminal implements Displayable {
+export class Terminal extends Displayable {
     term: xterm.Terminal;
     currentTitle: State<string> = van.state("Terminal");
-    del: () => void;
     dom: HTMLElement;
     private terminalId: string | null = null;
     private fitAddon: FitAddon;
@@ -15,15 +14,12 @@ export class Terminal implements Displayable {
     private unsubTerminalData?: () => void;
     private unsubTerminalExit?: () => void;
 
-    setDeleteFunction(del: () => void): void {
-        this.del = del;
-    }
-
     title(): string {
         return this.currentTitle.val;
     }
 
     constructor() {
+        super();
         this.term = new xterm.Terminal({
             // cursorBlink: true,
             // fontSize: 14,
@@ -33,8 +29,9 @@ export class Terminal implements Displayable {
         this.fitAddon = new FitAddon();
         this.term.loadAddon(this.fitAddon);
 
-        this.dom = v.div({ class: "h-full w-2xl resize-x overflow-x-hidden scroll-m-[100px]" });
-        this.dom.addEventListener("focusin", () => this.focus());
+        this.dom = v.div({
+            class: "h-full w-2xl resize-x overflow-x-hidden scroll-m-[100px]",
+        });
 
         const loaded = van.state(false);
 
@@ -124,6 +121,7 @@ export class Terminal implements Displayable {
         if (this.unsubTerminalData) this.unsubTerminalData();
         if (this.unsubTerminalExit) this.unsubTerminalExit();
         this.term.dispose();
-        this.del();
+        if (this.deleteFn) this.deleteFn();
+        return true;
     }
 }

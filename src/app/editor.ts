@@ -33,9 +33,9 @@ import { languages } from "@codemirror/language-data";
 import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import van from "vanjs-core";
+import { Displayable } from "./displayable";
 
 import { OpenFile } from "./filestate";
-import { Displayable } from "./editorgrid";
 
 const fixedHeightEditor = EditorView.theme({
     "&": {
@@ -74,11 +74,9 @@ function fileStatusPanel(view: EditorView) {
         "padding: 2px 10px; font-size: 12px; color: white; background: #900;";
     return { top: true, dom };
 }
-
-export class Editor implements Displayable {
+export class Editor extends Displayable {
     view: EditorView;
     file: OpenFile;
-    deleteFn?: () => void;
 
     private wordWrapCompartment = new Compartment();
     private languageCompartment = new Compartment();
@@ -91,6 +89,7 @@ export class Editor implements Displayable {
     }
 
     constructor(file: OpenFile) {
+        super();
         this.file = file;
         const kmap = keymap.of([
             ...defaultKeymap,
@@ -105,7 +104,6 @@ export class Editor implements Displayable {
                     return true;
                 },
             },
-            { key: "Mod-w", run: () => this.close() },
             {
                 key: "Alt-z",
                 run: () => {
@@ -116,8 +114,6 @@ export class Editor implements Displayable {
                     return true;
                 },
             },
-            { key: "Alt--", run: () => this.changeWidth(-100) },
-            { key: "Alt-=", run: () => this.changeWidth(100) },
         ]);
         this.view = new EditorView({
             doc: file.rootState.val.doc,
@@ -149,9 +145,6 @@ export class Editor implements Displayable {
                 // lintKeymap,
             ],
         });
-        this.view.dom.addEventListener("focusin", () =>
-            this.view.dom.scrollIntoView({ behavior: "smooth" }),
-        );
 
         van.derive(() => {
             LanguageDescription.matchFilename(languages, file.filePath.val)
@@ -185,12 +178,6 @@ export class Editor implements Displayable {
         return this.file.filePath.val + (this.file.isDirty() ? "*" : "");
     }
 
-    changeWidth(increment: number) {
-        const w = parseInt(window.getComputedStyle(this.view.dom).width, 10);
-        this.view.dom.style.width = w + increment + "px";
-        return true;
-    }
-
     close() {
         if (this.deleteFn) {
             this.file.removeEditor(this, this.deleteFn);
@@ -204,9 +191,5 @@ export class Editor implements Displayable {
         this.view.dispatch({
             effects: compartment.reconfigure(on ? [] : extension),
         });
-    }
-
-    setDeleteFunction(fn: () => void) {
-        this.deleteFn = fn;
     }
 }

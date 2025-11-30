@@ -149,7 +149,9 @@ export class Editor implements Displayable {
                 // lintKeymap,
             ],
         });
-        this.view.dom.addEventListener("focusin", () => this.view.dom.scrollIntoView({ behavior: "smooth", }));
+        this.view.dom.addEventListener("focusin", () =>
+            this.view.dom.scrollIntoView({ behavior: "smooth" }),
+        );
 
         van.derive(() => {
             LanguageDescription.matchFilename(languages, file.filePath.val)
@@ -175,7 +177,7 @@ export class Editor implements Displayable {
     }
 
     focus() {
-        this.view.dom.scrollIntoView({ behavior: "smooth", });
+        this.view.dom.scrollIntoView({ behavior: "smooth" });
         this.view.focus();
     }
 

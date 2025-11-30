@@ -29,7 +29,7 @@ const EditorWrapper = (
             const list = editors[currentTab.val] || [];
 
             // Find nearest non-empty neighbor (scan left then right)
-            let neighborState: State<Displayable> | null = null;
+            let neighborState: Displayable | null = null;
             for (let i = k - 1; i >= 0; i--) {
                 const c = list[i];
                 if (c) {
@@ -40,7 +40,7 @@ const EditorWrapper = (
             if (!neighborState) {
                 for (let i = k + 1; i < list.length; i++) {
                     const c = list[i];
-                    if (c && c.val) {
+                    if (c) {
                         neighborState = c;
                         break;
                     }
@@ -70,7 +70,8 @@ const EditorWrapper = (
     );
 };
 
-const editors = vanX.reactive([[]]);
+// give type to editors
+const editors: Displayable[][] = vanX.reactive([[]]);
 const currentTab = van.state(0);
 
 export function addEditor(file: OpenFile) {
@@ -79,8 +80,8 @@ export function addEditor(file: OpenFile) {
     editor.focus();
 }
 
-export function addTab(file?: OpenFile) {
-    editors.push(file ? [file] : []);
+export function addTab() {
+    editors.push([]);
 }
 
 export function addTerminal() {

@@ -15,7 +15,9 @@ async function openFolder() {
 }
 
 // Refresh the current folder tree from main (re-open)
+let refreshScheduled = false;
 async function refreshFolder() {
+    refreshScheduled = false;
     const folderTree = await window.electronAPI.getWorkspaceTree().catch(alert);
     if (!folderTree) return;
     folderTreeState.val = folderTree;
@@ -36,7 +38,10 @@ window.electronAPI.onFsEvent(async (ev: { event: string; path: string }) => {
         ev.event === "unlink"
     ) {
         // Debounce-ish: schedule a refresh
-        setTimeout(() => refreshFolder(), 50);
+        if(!refreshScheduled) {
+            refreshScheduled = true;
+            setTimeout(() => refreshFolder(), 50);
+        }
     }
 
     // If a file changed on disk and it's open, show disk version panels

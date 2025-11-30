@@ -77,7 +77,7 @@ export const FolderTreeView = () => {
                 { class: "font-bold flex-1" },
                 folderTreeState.val?.name ?? "No folder",
             ),
-            u.InlineButton(openFolder, "Refresh current folder", "⟳"),
+            u.InlineButton(refreshFolder, "Refresh current folder", "⟳"),
             u.InlineButton(openFolder, "Open another folder", "📁"),
         ),
         folderTreeState.val.children?.map(FsItemView) || [],

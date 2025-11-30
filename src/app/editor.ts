@@ -147,7 +147,7 @@ export class Editor implements Displayable {
                 // lintKeymap,
             ],
         });
-        this.view.dom.addEventListener("focusin", () => this.focus());
+        this.view.dom.addEventListener("focusin", () => this.view.dom.scrollIntoView({ behavior: "smooth", }));
 
         van.derive(() => {
             LanguageDescription.matchFilename(languages, file.filePath.val)

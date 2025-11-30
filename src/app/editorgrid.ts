@@ -11,6 +11,7 @@ export interface Displayable {
     setDeleteFunction(del: () => void): void;
     title(): string;
     close(): void;
+    focus(): void;
     dom: HTMLElement;
 }
 

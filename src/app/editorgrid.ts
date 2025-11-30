@@ -22,9 +22,41 @@ const EditorWrapper = (
 ) => {
     // Set the delete function on the editor when it's created
     van.derive(() => {
-        if (editor.val) {
-            editor.val.setDeleteFunction(del);
-        }
+        if (!editor || !editor.val) return;
+
+        const wrappedDelete = () => {
+            // TODO: find a better way to get the list containing this EditorWrapper
+            const list = editors[currentTab.val] || [];
+
+            // Find nearest non-empty neighbor (scan left then right)
+            let neighborState: State<Displayable> | null = null;
+            for (let i = k - 1; i >= 0; i--) {
+                const c = list[i];
+                if (c) {
+                    neighborState = c;
+                    break;
+                }
+            }
+            if (!neighborState) {
+                for (let i = k + 1; i < list.length; i++) {
+                    const c = list[i];
+                    if (c && c.val) {
+                        neighborState = c;
+                        break;
+                    }
+                }
+            }
+
+            // Call the original delete function which updates the reactive list / DOM
+            del();
+
+            // After reactive update, focus the neighbor if available
+            if (neighborState) {
+                neighborState.focus();
+            }
+        };
+
+        editor.val.setDeleteFunction(wrappedDelete);
     });
 
     return v.div(
@@ -98,9 +130,8 @@ function shortcutHandler(e: KeyboardEvent) {
             addTerminal();
         }
         e.preventDefault();
-
     }
 }
 
-document.addEventListener("keyup", shortcutHandler, { capture: true, });
-document.addEventListener("keydown", shortcutHandler, { capture: true, });
+document.addEventListener("keyup", shortcutHandler, { capture: true });
+document.addEventListener("keydown", shortcutHandler, { capture: true });

@@ -8,8 +8,6 @@ import {
     LSPClient,
     languageServerExtensions,
     Workspace,
-    WorkspaceFile,
-    LSPPlugin,
 } from "@codemirror/lsp-client";
 
 import { OpenFile } from "./filestate";
@@ -100,30 +98,16 @@ class OpenFileWorkspace extends Workspace {
     // based on the editor views or the OpenFile state when no view exists.
     // TODO: fix (cause vibe coding is useless)
     syncFiles() {
-        let result: any[] = [];
-        for (let file of this.files) {
-            const view = file.getView?.();
-            if (view) {
-                const plugin = LSPPlugin.get(view);
-                if (!plugin) continue;
-                const changes = plugin.unsyncedChanges;
-                if (!changes.empty) {
-                    result.push({ file, prevDoc: file.doc, changes });
-                    file.doc = view.state.doc;
-                    file.version = this.nextFileVersion(file.uri);
-                    plugin.clear();
-                }
-            } else {
-                // No view; try to find a corresponding OpenFile and update
-                const path = file.uri.replace(/^file:\/\//, "");
-                const of = OpenFile.findOpenFile(path);
-                if (of && of.doc.toString() !== file.doc.toString()) {
-                    const prev = file.doc;
-                    const changes = ChangeSet.empty(prev.length);
-                    result.push({ file, prevDoc: prev, changes });
-                    file.doc = of.doc;
-                    file.version = this.nextFileVersion(file.uri);
-                }
+        const result = [];
+        for (const file of this.files) {
+            const prevDoc = file.doc;
+            // TODO: get changes from rootState (tracked in OpenFile) rather than the view's LSPPlugin.
+            const changes = file.changes;
+            if (changes && !changes.empty) {
+                result.push({ file, prevDoc, changes });
+                file.doc = file.rootState.val.doc;
+                file.version = this.nextFileVersion(file.uri);
+                file.changes = ChangeSet.empty(file.doc.length);
             }
         }
         return result;
@@ -139,6 +123,7 @@ class OpenFileWorkspace extends Workspace {
             console.warn("LSP: attempted to open unknown file", uri);
             return;
         }
+        of.doc = view.state.doc;
         this.files.push(of);
         this.client.didOpen(of);
     }
@@ -149,6 +134,7 @@ class OpenFileWorkspace extends Workspace {
             console.warn("LSP: attempted to update unknown file", uri);
             return;
         }
+        // TODO: maybe couple undos across editors for things like LSP rename?
         file.dispatch(update);
     }
 

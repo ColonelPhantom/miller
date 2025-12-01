@@ -5,6 +5,7 @@ import {
     StateEffect,
     Text,
     Transaction,
+    ChangeSet,
 } from "@codemirror/state";
 import { history } from "@codemirror/commands";
 import { Editor } from "./editor";
@@ -159,10 +160,11 @@ export class OpenFile implements WorkspaceFile {
         const transaction = this.rootState.val.update(trs);
         this.rootState.val = transaction.state;
 
-        // If the transaction introduced document changes, increment version
         if (transaction.changes && !transaction.changes.empty) {
-            this.version = (this.version || 0) + 1;
-            // TODO: call LSP didChange notification helper here
+            if (this.changes === undefined) {
+                this.changes = ChangeSet.empty(this.rootState.val.doc.length);
+            }
+            this.changes = this.changes.compose(transaction.changes);
         }
 
         if (origin) {
@@ -200,9 +202,8 @@ export class OpenFile implements WorkspaceFile {
     get languageId(): string {
         return inferLanguageFromPath(this.filePath.val || "") || "";
     }
-    get doc(): Text {
-        return this.rootState.val.doc;
-    }
+    doc: Text;
+    changes: ChangeSet;
     // Return an EditorView to be used by the LSP Workspace for position mapping.
     // If `main` is provided and belongs to this open file, return it. Otherwise
     // return the first available editor view, or null if none exist.

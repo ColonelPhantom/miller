@@ -1,9 +1,18 @@
 // Minimal LSP integration helper for the editor.
 // Keeps all LSP-specific logic in one place so it's easy to review.
 
-import { Extension } from "@codemirror/state";
+import { Extension, ChangeSet, Text } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 
-import { LSPClient, languageServerExtensions } from "@codemirror/lsp-client";
+import {
+    LSPClient,
+    languageServerExtensions,
+    Workspace,
+    WorkspaceFile,
+    LSPPlugin,
+} from "@codemirror/lsp-client";
+
+import { OpenFile } from "./filestate";
 
 // Create a very small MessagePort-based transport implementation
 // compatible with @codemirror/lsp-client's expected Transport interface.
@@ -49,6 +58,110 @@ function filePathToUri(path: string) {
     }
 }
 
+// Map of active clients keyed by `${language}::${rootUri}`
+const clients = new Map<
+    string,
+    {
+        client: LSPClient;
+        transport?: any;
+    }
+>();
+
+export function inferLanguageFromPath(
+    filePath: string | undefined,
+): string | undefined {
+    if (!filePath) return undefined;
+    const m = filePath.match(/\.([^.\/]+)$/);
+    if (!m) return undefined;
+    const ext = m[1].toLowerCase();
+    if (ext === "ts" || ext === "tsx" || ext === "js" || ext === "jsx")
+        return "typescript";
+    if (ext === "py") return "python";
+    // add more mappings as needed
+    return undefined;
+}
+
+// Workspace implementation that maps our OpenFile model to the LSP client's
+// expectations. This supports multiple views per OpenFile by using the
+// OpenFile.getView method.
+class OpenFileWorkspace extends Workspace {
+    files: WorkspaceFile[] = [];
+    private fileVersions: { [uri: string]: number } = Object.create(null);
+
+    nextFileVersion(uri: string) {
+        return (this.fileVersions[uri] = (this.fileVersions[uri] ?? -1) + 1);
+    }
+
+    constructor(client: LSPClient) {
+        super(client);
+    }
+
+    // Look through known workspace files and update their docs/versions
+    // based on the editor views or the OpenFile state when no view exists.
+    syncFiles() {
+        let result: any[] = [];
+        for (let file of this.files) {
+            const view = file.getView?.();
+            if (view) {
+                const plugin = LSPPlugin.get(view);
+                if (!plugin) continue;
+                const changes = plugin.unsyncedChanges;
+                if (!changes.empty) {
+                    result.push({ file, prevDoc: file.doc, changes });
+                    file.doc = view.state.doc;
+                    file.version = this.nextFileVersion(file.uri);
+                    plugin.clear();
+                }
+            } else {
+                // No view; try to find a corresponding OpenFile and update
+                const path = file.uri.replace(/^file:\/\//, "");
+                const of = OpenFile.findOpenFile(path);
+                if (of && of.doc.toString() !== file.doc.toString()) {
+                    const prev = file.doc;
+                    const changes = ChangeSet.empty(prev.length);
+                    result.push({ file, prevDoc: prev, changes });
+                    file.doc = of.doc;
+                    file.version = this.nextFileVersion(file.uri);
+                }
+            }
+        }
+        return result;
+    }
+
+    openFile(uri: string, languageId: string, view: EditorView) {
+        if (this.getFile(uri)) return;
+        // Try to map to an existing OpenFile instance, prefer using its doc
+        const path = uri.replace(/^file:\/\//, "");
+        const of = OpenFile.findOpenFile(path);
+        const file: WorkspaceFile = of
+            ? {
+                  uri,
+                  languageId: of.languageId || languageId,
+                  version: of.version,
+                  doc: of.doc,
+                  getView: (main?: EditorView) => of.getView(main ?? view),
+              }
+            : {
+                  uri,
+                  languageId,
+                  version: this.nextFileVersion(uri),
+                  doc: view.state.doc,
+                  getView: () => view,
+              };
+        this.files.push(file);
+        this.client.didOpen(file);
+    }
+
+    closeFile(uri: string, view: EditorView) {
+        const path = uri.replace(/^file:\/\//, "");
+        const of = OpenFile.findOpenFile(path);
+        // If OpenFile exists and still has editors, defer closing
+        if (of && of.editors.length > 0) return;
+        this.files = this.files.filter((f) => f.uri !== uri);
+        this.client.didClose(uri);
+    }
+}
+
 // Public helper: attempt to create an LSP extension for `filePath`.
 // Returns an empty array (no-op extension) on failure so callers can safely
 // reconfigure their compartments with the returned value.
@@ -56,24 +169,71 @@ export async function createLspExtension(
     filePath?: string,
 ): Promise<Extension> {
     if (!filePath) return [];
-
-    // Try to establish a transport via main process MessagePort. This will
-    // cause main to spawn (or reuse) an LSP server and hand us a MessagePort
-    // connected to it.
-    let transport;
+    // Determine workspace root (filesystem path) and a file:// URI for LSP
+    let rootPath: string | undefined = undefined;
+    let rootUri: string | undefined = undefined;
     try {
-        // Request main process to create/attach an LSP server and transfer a
-        // MessagePort into the page. The preload will `postMessage` the port
-        // into the page with `{ source: 'electron-lsp' }` when it's ready.
-        await window.electronAPI.connectLsp();
-        const port = await new Promise<MessagePort>((resolve, reject) => {
+        const ws = await window.electronAPI.getCurrentWorkspace();
+        if (ws && ws.root) {
+            rootPath = ws.root;
+            rootUri = filePathToUri(ws.root);
+        }
+    } catch (e) {
+        console.warn("Failed to get workspace root from main process:", e);
+    }
+    if (!rootPath) {
+        try {
+            const dir = filePath.replace(/\/[^\/]*$/, "");
+            rootPath = dir;
+            rootUri = filePathToUri(dir);
+        } catch (e) {
+            console.warn("Failed to derive workspace dir from file path:", e);
+        }
+    }
+
+    const language = inferLanguageFromPath(filePath);
+    const serverKey = `${language || "auto"}::${rootPath || ""}`;
+
+    // Reuse existing client if available
+    if (clients.has(serverKey)) {
+        const entry = clients.get(serverKey)!;
+        await entry.client.initializing;
+        try {
+            const uri = filePathToUri(filePath);
+            const ext = entry.client.plugin(uri);
+            return ext;
+        } catch (err) {
+            console.warn(
+                "Failed to create LSP plugin from existing client:",
+                err,
+            );
+            return [];
+        }
+    }
+
+    // Otherwise request a new server/port from main and create a client
+    try {
+        // Pass a filesystem root path to main so it can set cwd correctly.
+        await window.electronAPI.connectLsp({ language, root: rootPath });
+    } catch (err) {
+        console.warn("Failed to request LSP server from main:", err);
+        return [];
+    }
+
+    let port: MessagePort;
+    try {
+        port = await new Promise<MessagePort>((resolve, reject) => {
             const timeout = setTimeout(() => {
                 window.removeEventListener("message", onMessage);
                 reject(new Error("Timed out waiting for LSP MessagePort"));
             }, 5000);
             function onMessage(e: MessageEvent) {
                 try {
-                    if (e.data && e.data.source === "electron-lsp") {
+                    if (
+                        e.data &&
+                        e.data.source === "electron-lsp" &&
+                        e.data.serverKey === serverKey
+                    ) {
                         const ports = e.ports;
                         if (ports && ports.length > 0) {
                             clearTimeout(timeout);
@@ -89,48 +249,31 @@ export async function createLspExtension(
             }
             window.addEventListener("message", onMessage);
         });
-        transport = await simpleMessagePortTransport(port);
     } catch (err) {
-        console.warn("Failed to connect to LSP MessagePort:", err);
+        console.warn("Failed to receive LSP MessagePort:", err);
         return [];
     }
 
-    // Create client and connect
+    let transport;
     try {
-        // Determine a sensible rootUri for the workspace. Prefer the explicit
-        // workspace root reported by the main process, otherwise use the
-        // directory containing the file.
-        let rootUri: string | undefined = undefined;
-        try {
-            const ws = await window.electronAPI.getCurrentWorkspace();
-            if (ws && ws.root) rootUri = filePathToUri(ws.root);
-        } catch (e) {
-            // ignore and fall back
-            console.warn("Failed to get workspace root from main process:", e);
-        }
-        if (!rootUri) {
-            try {
-                const dir = filePath.replace(/\/[^\/]*$/, "");
-                rootUri = filePathToUri(dir);
-            } catch (e) {
-                console.warn("Failed to convert file path to URI via URL:", e);
-            }
-        }
+        transport = await simpleMessagePortTransport(port);
+    } catch (err) {
+        console.warn("Failed to create transport from MessagePort:", err);
+        return [];
+    }
 
+    try {
         const client = new LSPClient({
             extensions: languageServerExtensions(),
             rootUri: rootUri,
+            workspace: (c) => new OpenFileWorkspace(c),
         });
-        console.log("LSP client created with extensions:", client);
-        // Pass a client/connection config containing the rootUri. The librar
-        // accepts a config object; we use `as any` to avoid TS errors here.
         client.connect(transport);
-
         await client.initializing;
 
-        // The client exposes a `plugin` method which yields an extension that
-        // wires up autocompletion, diagnostics, and other LSP features for a
-        // given URI. We convert the local path to a file:// URI.
+        // Store client.
+        clients.set(serverKey, { client, transport });
+
         const uri = filePathToUri(filePath);
         return client.plugin(uri);
     } catch (err) {

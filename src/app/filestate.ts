@@ -9,14 +9,18 @@ import {
 import { history } from "@codemirror/commands";
 import { Editor } from "./editor";
 import van, { State } from "vanjs-core";
+import { WorkspaceFile } from "@codemirror/lsp-client";
+import { inferLanguageFromPath } from "./lsp";
+import { EditorView } from "@codemirror/view";
 
-const openFiles: { [path: string]: OpenFile } = {};
+// export const openFiles: { [path: string]: OpenFile } = {};
+export const openFiles: Map<string, OpenFile> = new Map();
 
-export class OpenFile {
+export class OpenFile implements WorkspaceFile {
     // Helper: find an open file instance by path
     static findOpenFile(path?: string): OpenFile | undefined {
         if (!path) return undefined;
-        return openFiles[path];
+        return openFiles.get(path);
     }
     filePath: State<string>;
     editors: Editor[];
@@ -38,6 +42,9 @@ export class OpenFile {
         this.expectedDiskContent = van.state(null);
         this.knownDiskContent = van.state(null);
 
+        // LSP version counter: starts at 1 when document is first created/opened
+        this.version = 1;
+
         this.diskDiscrepancyMessage = van.derive(() => {
             const expected = this.expectedDiskContent.val;
             const known = this.knownDiskContent.val;
@@ -53,8 +60,8 @@ export class OpenFile {
     }
 
     static async openFile(filePath?: string): Promise<OpenFile> {
-        if (filePath && openFiles[filePath]) {
-            return openFiles[filePath];
+        if (filePath && openFiles.has(filePath)) {
+            return openFiles.get(filePath)!;
         }
         const { content, path } = await window.electronAPI.readFile(filePath);
         const file = new OpenFile({ doc: content });
@@ -66,10 +73,10 @@ export class OpenFile {
 
     private setPath(path: string) {
         if (this.filePath.val) {
-            delete openFiles[this.filePath.val];
+            openFiles.delete(this.filePath.val);
         }
         this.filePath.val = path;
-        openFiles[path] = this;
+        openFiles.set(path, this);
         // TODO: what if openFiles[path] already exists?
     }
 
@@ -79,6 +86,10 @@ export class OpenFile {
             await window.electronAPI.saveFile(doc, this.filePath.val);
             this.lastSaved.val = this.rootState.val.doc;
             this.expectedDiskContent.val = doc;
+            // Notify LSP clients that the file was saved. The lsp plugin typically
+            // listens to EditorView changes and save events; nudging the views
+            // ensures any listeners pick up the final document state.
+            this.notifyLspSave();
         } else {
             await this.saveAs();
         }
@@ -90,6 +101,7 @@ export class OpenFile {
         this.setPath(path);
         this.lastSaved.val = this.rootState.val.doc;
         this.expectedDiskContent.val = doc;
+        this.notifyLspSave();
     }
 
     // Function to create and return a new EditorView for this file
@@ -117,7 +129,9 @@ export class OpenFile {
 
         // If no more editors, remove from openFiles dictionary
         if (this.editors.length === 0) {
-            delete openFiles[this.filePath.val];
+            // Notify LSP that the document is closed
+            this.notifyLspClose();
+            openFiles.delete(this.filePath.val);
         }
 
         callback();
@@ -150,6 +164,13 @@ export class OpenFile {
     dispatch(trs: TransactionSpec, origin?: Editor) {
         const transaction = this.rootState.val.update(trs);
         this.rootState.val = transaction.state;
+
+        // If the transaction introduced document changes, increment version
+        if (transaction.changes && !transaction.changes.empty) {
+            this.version = (this.version || 0) + 1;
+            // TODO: call LSP didChange notification helper here
+        }
+
         if (origin) {
             const es = this.editors.filter((e) => e !== origin);
             es.forEach((e) => e.dispatch(e.view.state.update(trs), true));
@@ -174,5 +195,59 @@ export class OpenFile {
 
     isDirty(): boolean {
         return !this.lastSaved.val.eq(this.rootState.val.doc);
+    }
+
+    // LSP stuff
+    version: number;
+    get uri(): string | null {
+        if (!this.filePath.val) return null;
+        return `file://${this.filePath.val}`;
+    }
+    get languageId(): string {
+        return inferLanguageFromPath(this.filePath.val || "") || "";
+    }
+    get doc(): Text {
+        return this.rootState.val.doc;
+    }
+    // Return an EditorView to be used by the LSP Workspace for position mapping.
+    // If `main` is provided and belongs to this open file, return it. Otherwise
+    // return the first available editor view, or null if none exist.
+    getView(main?: EditorView): EditorView | null {
+        if (main) {
+            const found = this.editors.find((e) => e.view === main);
+            if (found) return main;
+        }
+        if (this.editors.length > 0) return this.editors[0].view;
+        return null;
+    }
+
+    // Lightweight helper to nudge LSP plugins on views after a save. This
+    // triggers a no-op dispatch on each view so that any view-bound listeners
+    // (including lsp-client's save/didSave handling) can observe the new state.
+    notifyLspSave() {
+        this.editors.forEach((e) => {
+            try {
+                // dispatch an empty transaction to trigger plugin observers
+                e.view.dispatch({});
+            } catch (err) {
+                console.warn("Failed to notify LSP of save for view:", err);
+            }
+        });
+    }
+
+    notifyLspClose() {
+        // Some language clients respond to EditorView disposal/transactions; to be
+        // conservative, dispatch a no-op and then attempt to remove the LSP
+        // extension from each view so the plugin can observe closure.
+        this.editors.forEach((e) => {
+            try {
+                e.view.dispatch({});
+                // Attempt to remove the LSP compartment extension if available.
+                // We cannot directly mutate another module's compartments here,
+                // but leaving an empty dispatch is a safe, low-impact notification.
+            } catch (err) {
+                console.warn("Failed to notify LSP of close for view:", err);
+            }
+        });
     }
 }

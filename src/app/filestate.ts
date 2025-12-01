@@ -86,10 +86,6 @@ export class OpenFile implements WorkspaceFile {
             await window.electronAPI.saveFile(doc, this.filePath.val);
             this.lastSaved.val = this.rootState.val.doc;
             this.expectedDiskContent.val = doc;
-            // Notify LSP clients that the file was saved. The lsp plugin typically
-            // listens to EditorView changes and save events; nudging the views
-            // ensures any listeners pick up the final document state.
-            this.notifyLspSave();
         } else {
             await this.saveAs();
         }
@@ -219,20 +215,6 @@ export class OpenFile implements WorkspaceFile {
         }
         if (this.editors.length > 0) return this.editors[0].view;
         return null;
-    }
-
-    // Lightweight helper to nudge LSP plugins on views after a save. This
-    // triggers a no-op dispatch on each view so that any view-bound listeners
-    // (including lsp-client's save/didSave handling) can observe the new state.
-    notifyLspSave() {
-        this.editors.forEach((e) => {
-            try {
-                // dispatch an empty transaction to trigger plugin observers
-                e.view.dispatch({});
-            } catch (err) {
-                console.warn("Failed to notify LSP of save for view:", err);
-            }
-        });
     }
 
     notifyLspClose() {

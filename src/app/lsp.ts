@@ -1,7 +1,7 @@
 // Minimal LSP integration helper for the editor.
 // Keeps all LSP-specific logic in one place so it's easy to review.
 
-import { Extension, ChangeSet, Text } from "@codemirror/state";
+import { Extension, ChangeSet, TransactionSpec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
 import {
@@ -85,7 +85,7 @@ export function inferLanguageFromPath(
 // expectations. This supports multiple views per OpenFile by using the
 // OpenFile.getView method.
 class OpenFileWorkspace extends Workspace {
-    files: WorkspaceFile[] = [];
+    files: OpenFile[] = [];
     private fileVersions: { [uri: string]: number } = Object.create(null);
 
     nextFileVersion(uri: string) {
@@ -98,6 +98,7 @@ class OpenFileWorkspace extends Workspace {
 
     // Look through known workspace files and update their docs/versions
     // based on the editor views or the OpenFile state when no view exists.
+    // TODO: fix (cause vibe coding is useless)
     syncFiles() {
         let result: any[] = [];
         for (let file of this.files) {
@@ -129,35 +130,36 @@ class OpenFileWorkspace extends Workspace {
     }
 
     openFile(uri: string, languageId: string, view: EditorView) {
+        console.log("LSP: attempting to open file", uri);
         if (this.getFile(uri)) return;
         // Try to map to an existing OpenFile instance, prefer using its doc
         const path = uri.replace(/^file:\/\//, "");
         const of = OpenFile.findOpenFile(path);
-        const file: WorkspaceFile = of
-            ? {
-                  uri,
-                  languageId: of.languageId || languageId,
-                  version: of.version,
-                  doc: of.doc,
-                  getView: (main?: EditorView) => of.getView(main ?? view),
-              }
-            : {
-                  uri,
-                  languageId,
-                  version: this.nextFileVersion(uri),
-                  doc: view.state.doc,
-                  getView: () => view,
-              };
-        this.files.push(file);
-        this.client.didOpen(file);
+        if (!of) {
+            console.warn("LSP: attempted to open unknown file", uri);
+            return;
+        }
+        this.files.push(of);
+        this.client.didOpen(of);
+    }
+
+    updateFile(uri: string, update: TransactionSpec): void {
+        const file = this.getFile(uri) as OpenFile;
+        if (!file) {
+            console.warn("LSP: attempted to update unknown file", uri);
+            return;
+        }
+        file.dispatch(update);
     }
 
     closeFile(uri: string, view: EditorView) {
         const path = uri.replace(/^file:\/\//, "");
         const of = OpenFile.findOpenFile(path);
         // If OpenFile exists and still has editors, defer closing
+        console.log("LSP: attempting to close file", uri, of);
         if (of && of.editors.length > 0) return;
         this.files = this.files.filter((f) => f.uri !== uri);
+        console.log("LSP: closing file", uri);
         this.client.didClose(uri);
     }
 }

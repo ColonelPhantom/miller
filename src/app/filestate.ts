@@ -97,7 +97,6 @@ export class OpenFile implements WorkspaceFile {
         this.setPath(path);
         this.lastSaved.val = this.rootState.val.doc;
         this.expectedDiskContent.val = doc;
-        this.notifyLspSave();
     }
 
     // Function to create and return a new EditorView for this file
@@ -122,11 +121,10 @@ export class OpenFile implements WorkspaceFile {
 
         // Remove the editor from the list
         this.editors.splice(index, 1);
+        editor.view.destroy();
 
         // If no more editors, remove from openFiles dictionary
         if (this.editors.length === 0) {
-            // Notify LSP that the document is closed
-            this.notifyLspClose();
             openFiles.delete(this.filePath.val);
         }
 
@@ -215,21 +213,5 @@ export class OpenFile implements WorkspaceFile {
         }
         if (this.editors.length > 0) return this.editors[0].view;
         return null;
-    }
-
-    notifyLspClose() {
-        // Some language clients respond to EditorView disposal/transactions; to be
-        // conservative, dispatch a no-op and then attempt to remove the LSP
-        // extension from each view so the plugin can observe closure.
-        this.editors.forEach((e) => {
-            try {
-                e.view.dispatch({});
-                // Attempt to remove the LSP compartment extension if available.
-                // We cannot directly mutate another module's compartments here,
-                // but leaving an empty dispatch is a safe, low-impact notification.
-            } catch (err) {
-                console.warn("Failed to notify LSP of close for view:", err);
-            }
-        });
     }
 }

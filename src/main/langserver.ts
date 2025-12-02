@@ -76,17 +76,17 @@ function ensureLspForKey(
         while (true) {
             const headerEnd = entry.buffer.indexOf("\r\n\r\n");
             if (headerEnd === -1) break;
-            const header = entry.buffer.slice(0, headerEnd).toString();
+            const header = entry.buffer.subarray(0, headerEnd).toString();
             const m = header.match(/Content-Length:\s*(\d+)/i);
             if (!m) {
                 // Malformed, drop
-                entry.buffer = entry.buffer.slice(headerEnd + 4);
+                entry.buffer = entry.buffer.subarray(headerEnd + 4);
                 continue;
             }
             const len = parseInt(m[1], 10);
             const totalLen = headerEnd + 4 + len;
             if (entry.buffer.length < totalLen) break; // wait for more
-            const body = entry.buffer.slice(headerEnd + 4, totalLen).toString();
+            const body = entry.buffer.subarray(headerEnd + 4, totalLen).toString();
             // Forward body to all attached ports
             try {
                 entry.ports.forEach((p) => {
@@ -103,7 +103,7 @@ function ensureLspForKey(
             } catch (err) {
                 console.warn("Failed to forward LSP message to renderer", err);
             }
-            entry.buffer = entry.buffer.slice(totalLen);
+            entry.buffer = entry.buffer.subarray(totalLen);
         }
     });
 

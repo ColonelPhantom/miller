@@ -61,9 +61,9 @@ const EditorWrapper = (
     });
 
     return v.div(
-        { class: "flex flex-col" },
+        { class: "flex flex-col group" },
         v.div(
-            { class: "flex" },
+            { class: "flex group-focus-within:bg-blue-300" },
             v.span({ class: "mx-1 flex-1" }, () => editor.val.title()),
             u.InlineButton(() => editor.val.close(), "Close", "❌"),
         ),

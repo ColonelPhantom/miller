@@ -4,14 +4,15 @@ import {
     handleReadFile,
     handleSaveFile,
     // handleCreateFile,
-    getCurrentWorkspace,
     getOpenedFiles,
     showConfirmDialog,
     getWorkspaceTree,
+    getCurrentWorkspace,
 } from "./fileOperations";
 import { terminalManager } from "./pty";
 import path from "node:path";
 import started from "electron-squirrel-startup";
+import { setupLangServer } from "./langserver";
 /// <reference types="./forge-vite-env.d.ts" />
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -103,6 +104,12 @@ app.whenReady().then(() => {
             );
         },
     );
+
+    // Terminal handlers
+
+    // LSP server manager moved to src/main/langserver.ts
+    // It is initialized below via setupLangServer().
+    setupLangServer();
 
     // Terminal handlers
     ipcMain.handle(

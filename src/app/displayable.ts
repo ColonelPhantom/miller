@@ -22,7 +22,7 @@ export abstract class Displayable {
         setTimeout(() => this.installHandlers(0), 0);
 
         // Add general shortcuts
-        this.addShortcut("Ctrl-w", () => this.close());
+        this.addShortcut("Alt-w", () => this.close());
         this.addShortcut("Alt--", () => this.changeWidth(-100));
         this.addShortcut("Alt-=", () => this.changeWidth(100));
     }

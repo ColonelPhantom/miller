@@ -60,8 +60,23 @@ declare global {
             removeAllTerminalListeners: () => void;
             // Filesystem events
             onFsEvent: (
-                callback: (ev: { event: string; path: string }) => void,
+                callback: (ev: {
+                    event: string;
+                    path: string;
+                }) => void | Promise<void>,
             ) => void;
+
+            // Request that the main process create (or reuse) an LSP server and
+            // transfer a MessagePort into the page context. Because the
+            // ContextBridge cannot directly return MessagePort objects, this
+            // function resolves once the port has been transferred to the page
+            // via `window.postMessage` and the page should listen for a
+            // message with `{ source: 'electron-lsp' }` and take the transferred
+            // port from `event.ports[0]`.
+            connectLsp: (opts?: {
+                language?: string;
+                root?: string;
+            }) => Promise<any>;
         };
     }
 }

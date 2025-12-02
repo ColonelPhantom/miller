@@ -105,4 +105,45 @@ contextBridge.exposeInMainWorld("electronAPI", {
             },
         );
     },
+
+    // LSP connect: request a MessagePort connected to a language server which
+    // is spawned in the main process. Returns a `MessagePort` that can be used
+    // for bidirectional communication (postMessage/onmessage).
+    connectLsp: async (opts?: { language?: string; root?: string }) => {
+        // Request the main process for a MessagePort. When it arrives we
+        // transfer it into the page (main world) using window.postMessage so
+        // the page can receive the actual MessagePort object (contextBridge
+        // does not allow direct transfer of MessagePort objects via return
+        // values). The main process will include metadata `{ serverKey, language }`
+        // when posting the port so we can forward that on to the page.
+        return new Promise<void>((resolve, reject) => {
+            ipcRenderer.once("lsp:port", (event, payload) => {
+                const ports = event.ports as MessagePort[];
+                if (ports && ports.length > 0) {
+                    try {
+                        // Transfer port into the page context along with metadata.
+                        window.postMessage(
+                            {
+                                source: "electron-lsp",
+                                serverKey: payload.serverKey,
+                                language: payload.language,
+                            },
+                            "*",
+                            [ports[0]],
+                        );
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
+                } else {
+                    reject(new Error("No MessagePort received from main"));
+                }
+            });
+            try {
+                ipcRenderer.invoke("lsp:connect", opts);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    },
 });

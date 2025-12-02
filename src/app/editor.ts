@@ -19,7 +19,7 @@ import {
     crosshairCursor,
     showPanel,
 } from "@codemirror/view";
-import { defaultKeymap, undo, redo } from "@codemirror/commands";
+import { defaultKeymap, undo, redo, indentWithTab } from "@codemirror/commands";
 import { oneDark } from "@codemirror/theme-one-dark";
 import {
     LanguageDescription,
@@ -32,10 +32,18 @@ import {
 import { languages } from "@codemirror/language-data";
 import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
+import { lintKeymap } from "@codemirror/lint";
 import van from "vanjs-core";
 import { Displayable } from "./displayable";
+import { createLspExtension } from "./lsp";
 
 import { OpenFile } from "./filestate";
+import {
+    findReferencesKeymap,
+    formatKeymap,
+    jumpToDefinitionKeymap,
+    renameKeymap,
+} from "@codemirror/lsp-client";
 
 const fixedHeightEditor = EditorView.theme({
     "&": {
@@ -80,6 +88,7 @@ export class Editor extends Displayable {
 
     private wordWrapCompartment = new Compartment();
     private languageCompartment = new Compartment();
+    private lspCompartment = new Compartment();
 
     dispatch(tr: Transaction, inhibitSync = false) {
         this.view.update([tr]);
@@ -95,6 +104,13 @@ export class Editor extends Displayable {
             ...defaultKeymap,
             ...searchKeymap,
             ...foldKeymap,
+
+            ...lintKeymap,
+            ...jumpToDefinitionKeymap,
+            ...findReferencesKeymap,
+            ...formatKeymap,
+            ...renameKeymap,
+            indentWithTab,
             { key: "Mod-z", run: () => undo(file.target) },
             { key: "Mod-shift-z", run: () => redo(file.target) },
             {
@@ -126,6 +142,7 @@ export class Editor extends Displayable {
 
                 this.wordWrapCompartment.of(EditorView.lineWrapping),
                 this.languageCompartment.of([]),
+                this.lspCompartment.of([]),
                 lineNumbers(),
                 highlightSpecialChars(),
                 foldGutter(),
@@ -142,7 +159,6 @@ export class Editor extends Displayable {
                 highlightActiveLineGutter(),
                 highlightSelectionMatches(),
                 indentUnit.of("    "),
-                // lintKeymap,
             ],
         });
 
@@ -150,10 +166,24 @@ export class Editor extends Displayable {
             LanguageDescription.matchFilename(languages, file.filePath.val)
                 ?.load()
                 .then((Lang) => {
-                    // const eff = StateEffect.appendConfig.of(Lang);
                     const eff = this.languageCompartment.reconfigure(Lang);
                     this.view.dispatch({ effects: [eff] });
                 });
+        });
+
+        // Load LSP extension for this file path if possible. This is optional
+        // and fails silently if the lsp client or server is not available.
+        van.derive(() => {
+            const p = file.filePath.val;
+            // Kick off async creation, then reconfigure compartment when ready
+            createLspExtension(p).then((ext: Extension) => {
+                try {
+                    const eff = this.lspCompartment.reconfigure(ext);
+                    this.view.dispatch({ effects: [eff] });
+                } catch (err) {
+                    console.warn("Failed to apply LSP extension:", err);
+                }
+            });
         });
 
         van.derive(() => {

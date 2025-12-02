@@ -5,18 +5,23 @@ import {
     StateEffect,
     Text,
     Transaction,
+    ChangeSet,
 } from "@codemirror/state";
 import { history } from "@codemirror/commands";
 import { Editor } from "./editor";
 import van, { State } from "vanjs-core";
+import { WorkspaceFile } from "@codemirror/lsp-client";
+import { inferLanguageFromPath } from "./lsp";
+import { EditorView } from "@codemirror/view";
 
-const openFiles: { [path: string]: OpenFile } = {};
+// export const openFiles: { [path: string]: OpenFile } = {};
+export const openFiles: Map<string, OpenFile> = new Map();
 
-export class OpenFile {
+export class OpenFile implements WorkspaceFile {
     // Helper: find an open file instance by path
     static findOpenFile(path?: string): OpenFile | undefined {
         if (!path) return undefined;
-        return openFiles[path];
+        return openFiles.get(path);
     }
     filePath: State<string>;
     editors: Editor[];
@@ -38,6 +43,9 @@ export class OpenFile {
         this.expectedDiskContent = van.state(null);
         this.knownDiskContent = van.state(null);
 
+        // LSP version counter: starts at 1 when document is first created/opened
+        this.version = 1;
+
         this.diskDiscrepancyMessage = van.derive(() => {
             const expected = this.expectedDiskContent.val;
             const known = this.knownDiskContent.val;
@@ -53,8 +61,8 @@ export class OpenFile {
     }
 
     static async openFile(filePath?: string): Promise<OpenFile> {
-        if (filePath && openFiles[filePath]) {
-            return openFiles[filePath];
+        if (filePath && openFiles.has(filePath)) {
+            return openFiles.get(filePath)!;
         }
         const { content, path } = await window.electronAPI.readFile(filePath);
         const file = new OpenFile({ doc: content });
@@ -66,10 +74,10 @@ export class OpenFile {
 
     private setPath(path: string) {
         if (this.filePath.val) {
-            delete openFiles[this.filePath.val];
+            openFiles.delete(this.filePath.val);
         }
         this.filePath.val = path;
-        openFiles[path] = this;
+        openFiles.set(path, this);
         // TODO: what if openFiles[path] already exists?
     }
 
@@ -114,10 +122,11 @@ export class OpenFile {
 
         // Remove the editor from the list
         this.editors.splice(index, 1);
+        editor.view.destroy();
 
         // If no more editors, remove from openFiles dictionary
         if (this.editors.length === 0) {
-            delete openFiles[this.filePath.val];
+            openFiles.delete(this.filePath.val);
         }
 
         callback();
@@ -150,6 +159,14 @@ export class OpenFile {
     dispatch(trs: TransactionSpec, origin?: Editor) {
         const transaction = this.rootState.val.update(trs);
         this.rootState.val = transaction.state;
+
+        if (transaction.changes && !transaction.changes.empty) {
+            if (this.changes === undefined) {
+                this.changes = ChangeSet.empty(this.rootState.val.doc.length);
+            }
+            this.changes = this.changes.compose(transaction.changes);
+        }
+
         if (origin) {
             const es = this.editors.filter((e) => e !== origin);
             es.forEach((e) => e.dispatch(e.view.state.update(trs), true));
@@ -174,5 +191,28 @@ export class OpenFile {
 
     isDirty(): boolean {
         return !this.lastSaved.val.eq(this.rootState.val.doc);
+    }
+
+    // LSP stuff
+    version: number;
+    get uri(): string | null {
+        if (!this.filePath.val) return null;
+        return `file://${this.filePath.val}`;
+    }
+    get languageId(): string {
+        return inferLanguageFromPath(this.filePath.val || "") || "";
+    }
+    doc: Text;
+    changes: ChangeSet;
+    // Return an EditorView to be used by the LSP Workspace for position mapping.
+    // If `main` is provided and belongs to this open file, return it. Otherwise
+    // return the first available editor view, or null if none exist.
+    getView(main?: EditorView): EditorView | null {
+        if (main) {
+            const found = this.editors.find((e) => e.view === main);
+            if (found) return main;
+        }
+        if (this.editors.length > 0) return this.editors[0].view;
+        return null;
     }
 }

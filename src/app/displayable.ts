@@ -47,6 +47,7 @@ export abstract class Displayable {
     changeWidth(increment: number) {
         const w = parseInt(window.getComputedStyle(this.dom).width, 10);
         this.dom.style.width = w + increment + "px";
+        this.dom.scrollIntoView();
         return true;
     }
 

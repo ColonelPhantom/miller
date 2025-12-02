@@ -19,7 +19,7 @@ import {
     crosshairCursor,
     showPanel,
 } from "@codemirror/view";
-import { defaultKeymap, undo, redo } from "@codemirror/commands";
+import { defaultKeymap, undo, redo, indentWithTab } from "@codemirror/commands";
 import { oneDark } from "@codemirror/theme-one-dark";
 import {
     LanguageDescription,
@@ -110,6 +110,7 @@ export class Editor extends Displayable {
             ...findReferencesKeymap,
             ...formatKeymap,
             ...renameKeymap,
+            indentWithTab,
             { key: "Mod-z", run: () => undo(file.target) },
             { key: "Mod-shift-z", run: () => redo(file.target) },
             {

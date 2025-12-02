@@ -96,12 +96,10 @@ class OpenFileWorkspace extends Workspace {
 
     // Look through known workspace files and update their docs/versions
     // based on the editor views or the OpenFile state when no view exists.
-    // TODO: fix (cause vibe coding is useless)
     syncFiles() {
         const result = [];
         for (const file of this.files) {
             const prevDoc = file.doc;
-            // TODO: get changes from rootState (tracked in OpenFile) rather than the view's LSPPlugin.
             const changes = file.changes;
             if (changes && !changes.empty) {
                 result.push({ file, prevDoc, changes });

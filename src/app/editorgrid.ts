@@ -17,27 +17,33 @@ const EditorWrapper = (
     van.derive(() => {
         if (!editor || !editor.val) return;
 
-        const wrappedDelete = () => {
-            // TODO: find a better way to get the list containing this EditorWrapper
+        const findLeft = () => {
             const list = editors[currentTab.val] || [];
-
-            // Find nearest non-empty neighbor (scan left then right)
-            let neighborState: Displayable | null = null;
             for (let i = k - 1; i >= 0; i--) {
                 const c = list[i];
                 if (c) {
-                    neighborState = c;
-                    break;
+                    return c;
                 }
             }
-            if (!neighborState) {
-                for (let i = k + 1; i < list.length; i++) {
-                    const c = list[i];
-                    if (c) {
-                        neighborState = c;
-                        break;
-                    }
+            return null;
+        };
+
+        const findRight = () => {
+            const list = editors[currentTab.val] || [];
+            for (let i = k + 1; i < list.length; i++) {
+                const c = list[i];
+                if (c) {
+                    return c;
                 }
+            }
+            return null;
+        };
+
+        const wrappedDelete = () => {
+            // Find nearest non-empty neighbor (scan left then right)
+            let neighborState: Displayable | null = findLeft();
+            if (!neighborState) {
+                neighborState = findRight();
             }
 
             // Call the original delete function which updates the reactive list / DOM
@@ -49,6 +55,8 @@ const EditorWrapper = (
             }
         };
 
+        editor.val.addShortcut("Alt-[", () => findLeft()?.focus());
+        editor.val.addShortcut("Alt-]", () => findRight()?.focus());
         editor.val.setDeleteFunction(wrappedDelete);
     });
 

@@ -38,7 +38,7 @@ window.electronAPI.onFsEvent(async (ev: { event: string; path: string }) => {
         ev.event === "unlink"
     ) {
         // Debounce-ish: schedule a refresh
-        if(!refreshScheduled) {
+        if (!refreshScheduled) {
             refreshScheduled = true;
             setTimeout(() => refreshFolder(), 50);
         }
@@ -90,7 +90,7 @@ const FsItemView = (tree: FolderTree): HTMLElement => {
     if (tree.type === "file")
         return v.p(
             {
-                class: "cursor-pointer hover:bg-gray-100",
+                class: "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700",
                 onclick: async () =>
                     addEditor(await OpenFile.openFile(tree.path)),
             },
@@ -100,20 +100,22 @@ const FsItemView = (tree: FolderTree): HTMLElement => {
     const isOpen = van.state(false);
     const children = () =>
         isOpen.val
-            ? v.ul({}, tree.children?.map(FsItemView))
+            ? v.ul({ class: "pl-4" }, tree.children?.map(FsItemView))
             : v.div({ ariaBusy: true });
     const folder = v.details(
         {
             class: "flex-auto inline",
             ontoggle: () => (isOpen.val = folder.open),
         },
-        v.summary(tree.name),
+        v.summary(
+            {
+                class: "cursor-pointer flex hover:bg-gray-100 dark:hover:bg-gray-700",
+            },
+            v.span(() => (isOpen.val ? "📂" : "📁")),
+            tree.name,
+        ),
         children,
     );
 
-    return v.div(
-        { class: "cursor-pointer flex hover:bg-gray-100" },
-        v.span(() => (isOpen.val ? "📂" : "📁")),
-        folder,
-    );
+    return folder;
 };

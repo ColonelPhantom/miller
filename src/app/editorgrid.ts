@@ -63,7 +63,9 @@ const EditorWrapper = (
     return v.div(
         { class: "flex flex-col group" },
         v.div(
-            { class: "flex group-focus-within:bg-blue-300" },
+            {
+                class: "flex group-focus-within:bg-blue-300 dark:group-focus-within:bg-blue-900",
+            },
             v.span({ class: "mx-1 flex-1" }, () => editor.val.title()),
             u.InlineButton(() => editor.val.close(), "Close", "❌"),
         ),
@@ -98,7 +100,7 @@ const TabHeader = (tab: State<Editor[]>, del: () => void, k: number) =>
     v.div(
         {
             class: () =>
-                `flex-auto flex ${currentTab.val === k ? "bg-green-500" : ""}`,
+                `flex-auto flex ${currentTab.val === k ? "bg-green-500 dark:bg-green-700" : ""}`,
             onclick: () => (currentTab.val = k),
         },
         v.span({ class: "mx-1 flex-1" }, "Tab " + k),

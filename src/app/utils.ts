@@ -2,7 +2,7 @@ import van from "vanjs-core";
 const v = van.tags;
 
 export const Button = (onclick: () => void, text: string) =>
-    v.button({ class: "bg-green-500 p-2", onclick }, text);
+    v.button({ class: "bg-green-500 dark:bg-green-700 p-2", onclick }, text);
 
 export const InlineButton = (
     onclick: () => void,

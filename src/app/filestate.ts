@@ -8,6 +8,7 @@ import {
     ChangeSet,
 } from "@codemirror/state";
 import { history } from "@codemirror/commands";
+import { Diagnostic, setDiagnostics } from "@codemirror/lint";
 import { Editor } from "./editor";
 import van, { State } from "vanjs-core";
 import { WorkspaceFile } from "@codemirror/lsp-client";
@@ -104,6 +105,11 @@ export class OpenFile implements WorkspaceFile {
     createEditor(): Editor {
         const editor = new Editor(this);
         this.editors.push(editor);
+        editor.dispatch(
+            editor.view.state.update(
+                setDiagnostics(editor.view.state, this.diagnostics || []),
+            ),
+        );
         return editor;
     }
 
@@ -172,12 +178,7 @@ export class OpenFile implements WorkspaceFile {
             es.forEach((e) => e.dispatch(e.view.state.update(trs), true));
         } else {
             this.editors.forEach((e) => {
-                const changes = transaction.changes;
-                const userEvent = transaction.annotation(Transaction.userEvent);
-                const annotations = userEvent
-                    ? [Transaction.userEvent.of(userEvent)]
-                    : [];
-                e.dispatch(e.view.state.update({ changes, annotations }), true);
+                e.dispatch(e.view.state.update(trs), true);
             });
         }
     }
@@ -214,5 +215,15 @@ export class OpenFile implements WorkspaceFile {
         }
         if (this.editors.length > 0) return this.editors[0].view;
         return null;
+    }
+
+    private diagnostics: Diagnostic[];
+    setDiagnostics(diagnostics: Diagnostic[]) {
+        this.diagnostics = diagnostics;
+        for (const editor of this.editors) {
+            editor.view.dispatch(
+                setDiagnostics(editor.view.state, diagnostics),
+            );
+        }
     }
 }

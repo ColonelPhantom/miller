@@ -7,11 +7,14 @@ import { EditorView } from "@codemirror/view";
 import {
     LSPClient,
     LSPPlugin,
-    languageServerExtensions,
     Workspace,
+    serverCompletion,
+    hoverTooltips,
+    signatureHelp,
 } from "@codemirror/lsp-client";
 
 import { OpenFile } from "./filestate";
+import { serverDiagnostics } from "./lsp/diagnostics";
 
 // Create a very small MessagePort-based transport implementation
 // compatible with @codemirror/lsp-client's expected Transport interface.
@@ -108,9 +111,9 @@ class OpenFileWorkspace extends Workspace {
                 file.version = this.nextFileVersion(file.uri);
                 file.changes = ChangeSet.empty(file.doc.length);
             }
-            for(const e of file.editors) {
+            for (const e of file.editors) {
                 const plugin = LSPPlugin.get(e.view);
-                if(plugin) {
+                if (plugin) {
                     plugin.clear();
                 }
             }
@@ -257,7 +260,12 @@ export async function createLspExtension(
 
     try {
         const client = new LSPClient({
-            extensions: languageServerExtensions(),
+            extensions: [
+                serverDiagnostics(),
+                serverCompletion(),
+                hoverTooltips(),
+                signatureHelp(),
+            ],
             rootUri: rootUri,
             workspace: (c) => new OpenFileWorkspace(c),
         });

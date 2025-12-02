@@ -13,6 +13,7 @@ import { terminalManager } from "./pty";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import { setupLangServer } from "./langserver";
+import { setMenu } from "./menu";
 /// <reference types="./forge-vite-env.d.ts" />
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -21,6 +22,7 @@ if (started) {
 }
 
 app.setName("miller");
+setMenu();
 
 const createWindow = () => {
     // Create the browser window.

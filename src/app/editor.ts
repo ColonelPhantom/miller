@@ -32,7 +32,7 @@ import {
 import { languages } from "@codemirror/language-data";
 import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
-import { lintKeymap } from "@codemirror/lint";
+import { lintGutter, lintKeymap } from "@codemirror/lint";
 import van from "vanjs-core";
 import { Displayable } from "./displayable";
 import { createLspExtension } from "./lsp";
@@ -146,6 +146,7 @@ export class Editor extends Displayable {
                 lineNumbers(),
                 highlightSpecialChars(),
                 foldGutter(),
+                lintGutter(),
                 drawSelection(),
                 dropCursor(),
                 EditorState.allowMultipleSelections.of(true),

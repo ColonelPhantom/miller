@@ -6,6 +6,7 @@ import { EditorView } from "@codemirror/view";
 
 import {
     LSPClient,
+    LSPPlugin,
     languageServerExtensions,
     Workspace,
 } from "@codemirror/lsp-client";
@@ -106,6 +107,12 @@ class OpenFileWorkspace extends Workspace {
                 file.doc = file.rootState.val.doc;
                 file.version = this.nextFileVersion(file.uri);
                 file.changes = ChangeSet.empty(file.doc.length);
+            }
+            for(const e of file.editors) {
+                const plugin = LSPPlugin.get(e.view);
+                if(plugin) {
+                    plugin.clear();
+                }
             }
         }
         return result;

@@ -27,7 +27,7 @@ setMenu();
 const createWindow = () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
-        width: 1152,
+        width: 1280,
         height: 720,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),

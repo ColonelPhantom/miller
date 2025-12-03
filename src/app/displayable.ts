@@ -17,8 +17,8 @@ export abstract class Displayable {
     private shortcuts = new Map<string, KeyHandler>();
 
     constructor() {
-        // Attempt to install handlers shortly after construction. If `dom` is not
-        // available yet, retry a few times.
+        // Attempt to install handlers shortly after construction.
+        // If `dom` is not available yet, retry a few times.
         setTimeout(() => this.installHandlers(0), 0);
 
         // Add general shortcuts

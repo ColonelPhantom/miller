@@ -86,7 +86,9 @@ function ensureLspForKey(
             const len = parseInt(m[1], 10);
             const totalLen = headerEnd + 4 + len;
             if (entry.buffer.length < totalLen) break; // wait for more
-            const body = entry.buffer.subarray(headerEnd + 4, totalLen).toString();
+            const body = entry.buffer
+                .subarray(headerEnd + 4, totalLen)
+                .toString();
             // Forward body to all attached ports
             try {
                 entry.ports.forEach((p) => {

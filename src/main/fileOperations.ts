@@ -20,7 +20,7 @@ let currentWorkspaceRoot: string | null = null;
 let watcher: chokidar.FSWatcher | null = null;
 
 export function getCurrentWorkspaceRoot(): string | null {
-  return currentWorkspaceRoot;
+    return currentWorkspaceRoot;
 }
 
 // Helper to (re)create watcher and wire up IPC notifications to renderer

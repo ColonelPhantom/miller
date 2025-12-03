@@ -167,10 +167,7 @@ export class OpenFile implements WorkspaceFile {
         this.rootState.val = transaction.state;
 
         if (transaction.changes && !transaction.changes.empty) {
-            if (this.changes === undefined) {
-                this.changes = ChangeSet.empty(this.rootState.val.doc.length);
-            }
-            this.changes = this.changes.compose(transaction.changes);
+            this.changeSet = this.changes.compose(transaction.changes);
         }
 
         if (origin) {
@@ -178,7 +175,12 @@ export class OpenFile implements WorkspaceFile {
             es.forEach((e) => e.dispatch(e.view.state.update(trs), true));
         } else {
             this.editors.forEach((e) => {
-                e.dispatch(e.view.state.update(trs), true);
+                const changes = transaction.changes;
+                const userEvent = transaction.annotation(Transaction.userEvent);
+                const annotations = userEvent
+                    ? [Transaction.userEvent.of(userEvent)]
+                    : [];
+                e.dispatch(e.view.state.update({ changes, annotations }), true);
             });
         }
     }
@@ -203,8 +205,16 @@ export class OpenFile implements WorkspaceFile {
     get languageId(): string {
         return inferLanguageFromPath(this.filePath.val || "") || "";
     }
+
     doc: Text;
-    changes: ChangeSet;
+    private changeSet: ChangeSet;
+    get changes(): ChangeSet {
+        if (!this.changeSet) {
+            this.changeSet = ChangeSet.empty(this.rootState.val.doc.length);
+        }
+        return this.changeSet;
+    }
+
     // Return an EditorView to be used by the LSP Workspace for position mapping.
     // If `main` is provided and belongs to this open file, return it. Otherwise
     // return the first available editor view, or null if none exist.

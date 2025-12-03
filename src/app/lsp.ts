@@ -109,7 +109,7 @@ class OpenFileWorkspace extends Workspace {
                 result.push({ file, prevDoc, changes });
                 file.doc = file.rootState.val.doc;
                 file.version = this.nextFileVersion(file.uri);
-                file.changes = ChangeSet.empty(file.doc.length);
+                file.clearChanges();
             }
             for (const e of file.editors) {
                 const plugin = LSPPlugin.get(e.view);

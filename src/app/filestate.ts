@@ -210,9 +210,12 @@ export class OpenFile implements WorkspaceFile {
     private changeSet: ChangeSet;
     get changes(): ChangeSet {
         if (!this.changeSet) {
-            this.changeSet = ChangeSet.empty(this.rootState.val.doc.length);
+            this.clearChanges();
         }
         return this.changeSet;
+    }
+    clearChanges(): void {
+        this.changeSet = ChangeSet.empty(this.rootState.val.doc.length);
     }
 
     // Return an EditorView to be used by the LSP Workspace for position mapping.

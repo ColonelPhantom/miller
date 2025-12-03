@@ -8,6 +8,12 @@ import * as u from "./utils";
 
 const folderTreeState = van.state<FolderTree | null>(null);
 
+van.derive(() => {
+    if (folderTreeState.val) {
+        document.title = folderTreeState.val.path + " - Miller code editor";
+    }
+});
+
 async function openFolder() {
     const folderTree = await window.electronAPI.openFolder().catch(alert);
     if (!folderTree) return;

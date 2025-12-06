@@ -41,9 +41,9 @@ import { OpenFile } from "./filestate";
 import {
     findReferencesKeymap,
     formatKeymap,
-    jumpToDefinitionKeymap,
     renameKeymap,
 } from "@codemirror/lsp-client";
+import { jumpToDefinitionKeymap } from "./lsp/definition";
 
 const fixedHeightEditor = EditorView.theme({
     "&": {

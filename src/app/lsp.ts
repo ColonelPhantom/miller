@@ -1,7 +1,7 @@
 // Minimal LSP integration helper for the editor.
 // Keeps all LSP-specific logic in one place so it's easy to review.
 
-import { Extension, ChangeSet, TransactionSpec } from "@codemirror/state";
+import { Extension, TransactionSpec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
 import {

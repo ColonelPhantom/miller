@@ -77,10 +77,11 @@ const EditorWrapper = (
 const editors: Displayable[][] = vanX.reactive([[]]);
 const currentTab = van.state(0);
 
-export function addEditor(file: OpenFile) {
+export function addEditor(file: OpenFile): Editor {
     const editor = file.createEditor();
     editors[currentTab.val].push(vanX.noreactive(editor));
     editor.focus();
+    return editor;
 }
 
 export function addTab() {

@@ -1,5 +1,4 @@
 import type * as lsp from "vscode-languageserver-protocol";
-import { ChangeSet } from "@codemirror/state";
 import { ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { LSPPlugin, LSPClientExtension } from "@codemirror/lsp-client";
 import { OpenFile } from "../filestate";

@@ -18,7 +18,7 @@ const lspServers = new Map<string, LspEntry>();
 // simple fallback mapping for a few languages — prefer env overrides
 const fallbackServerForLanguage: Record<string, string | undefined> = {
     typescript: "npx typescript-language-server --log-level 4 --stdio",
-    python: "pylsp",
+    python: "pylsp --check-parent-process",
 };
 
 function ensureLspForKey(

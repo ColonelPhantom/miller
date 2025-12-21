@@ -8,11 +8,11 @@ import {
     LSPClient,
     LSPPlugin,
     Workspace,
-    serverCompletion,
     hoverTooltips,
     signatureHelp,
 } from "@codemirror/lsp-client";
 
+import { serverCompletion } from "./lsp/completion";
 import { OpenFile } from "./filestate";
 import { serverDiagnostics } from "./lsp/diagnostics";
 

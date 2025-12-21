@@ -57,8 +57,6 @@ function ensureLspForKey(
         serverKey,
     );
 
-    console.log("Current environment: ", process.env);
-
     // Spawn using shell:true so PATH and shell resolution behave like a user shell.
     const proc = spawn([cmd].concat(args).join(" "), {
         stdio: ["pipe", "pipe", "pipe"],

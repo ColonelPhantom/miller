@@ -1,4 +1,4 @@
-import type * as lsp from "vscode-languageserver-protocol";
+import * as lsp from "vscode-languageserver-protocol";
 import { Extension, TransactionSpec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
@@ -137,7 +137,7 @@ class OpenFileWorkspace extends Workspace {
         return result;
     }
 
-    openFile(uri: string, languageId: string, view: EditorView) {
+    openFile(uri: string, _languageId: string, view: EditorView) {
         console.log("LSP: attempting to open file", uri);
         if (this.getFile(uri)) return;
         // Try to map to an existing OpenFile instance, prefer using its doc
@@ -162,7 +162,7 @@ class OpenFileWorkspace extends Workspace {
         file.dispatch(update);
     }
 
-    closeFile(uri: string, view: EditorView) {
+    closeFile(uri: string, _view: EditorView) {
         const path = uri.replace(/^file:\/\//, "");
         const of = OpenFile.findOpenFile(path);
         // If OpenFile exists and still has editors, defer closing
@@ -174,19 +174,32 @@ class OpenFileWorkspace extends Workspace {
     }
 }
 
+export function applyTextEdits(mapping: WorkspaceMapping, workspace: Workspace, uri: string, edits: lsp.TextEdit[], userEvent: string) {
+    const file = workspace.getFile(uri);
+    if(!file) return;
+    workspace.updateFile(uri, {
+        changes: edits.map(change => ({
+            from: mapping.mapPosition(uri, change.range.start),
+            to: mapping.mapPosition(uri, change.range.end),
+            insert: change.newText,
+        })),
+        userEvent,
+    })
+}
+
 export function applyWorkspaceEdit(mapping: WorkspaceMapping, workspace: Workspace, edit: lsp.WorkspaceEdit, userEvent: string) {
     for (const uri in edit.changes) {
         const lspChanges = edit.changes[uri];
-        const file = workspace.getFile(uri);
-        if (!lspChanges.length || !file) continue;
-        workspace.updateFile(uri, {
-            changes: lspChanges.map(change => ({
-                from: mapping.mapPosition(uri, change.range.start),
-                to: mapping.mapPosition(uri, change.range.end),
-                insert: change.newText,
-            })),
-            userEvent,
-        })
+        if (!lspChanges.length) continue;
+        applyTextEdits(mapping, workspace, uri, lspChanges, userEvent);
+    }
+    for (const change of edit.documentChanges) {
+        if (Object.hasOwn(change, "kind")) {
+            const action = change as (lsp.CreateFile | lsp.RenameFile | lsp.DeleteFile);
+            console.warn("Unsupported edit type!", action.kind);
+        }
+        const lspChanges = change as lsp.TextDocumentEdit;
+        applyTextEdits(mapping, workspace, lspChanges.textDocument.uri, lspChanges.edits, userEvent);
     }
 }
 

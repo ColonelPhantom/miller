@@ -1,6 +1,4 @@
-// Minimal LSP integration helper for the editor.
-// Keeps all LSP-specific logic in one place so it's easy to review.
-
+import type * as lsp from "vscode-languageserver-protocol";
 import { Extension, TransactionSpec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
@@ -10,6 +8,7 @@ import {
     Workspace,
     hoverTooltips,
     signatureHelp,
+    WorkspaceMapping
 } from "@codemirror/lsp-client";
 
 import { serverCompletion } from "./lsp/completion";
@@ -79,6 +78,23 @@ export function inferLanguageFromPath(
     if (ext === "ts" || ext === "tsx" || ext === "js" || ext === "jsx")
         return "typescript";
     if (ext === "py") return "python";
+    if (ext === "c" || ext === "h" || ext === "cpp" || ext === "hpp")
+        return "cpp";
+    if (ext === "java") return "java";
+    if (ext === "go") return "go";
+    if (ext === "rs") return "rust";
+    if (ext === "php") return "php";
+    if (ext === "rb") return "ruby";
+    if (ext === "cs") return "csharp";
+    if (ext === "html" || ext === "htm") return "html";
+    if (ext === "css" || ext === "scss" || ext === "less") return "css";
+    if (ext === "json") return "json";
+    if (ext === "xml") return "xml";
+    if (ext === "yaml" || ext === "yml") return "yaml";
+    if (ext === "md") return "markdown";
+    if (ext === "lua") return "lua";
+    if (ext === "sh" || ext === "bash") return "shellscript";
+    if (ext === "hs") return "haskell";
     // add more mappings as needed
     return undefined;
 }
@@ -155,6 +171,22 @@ class OpenFileWorkspace extends Workspace {
         this.files = this.files.filter((f) => f.uri !== uri);
         console.log("LSP: closing file", uri);
         this.client.didClose(uri);
+    }
+}
+
+export function applyWorkspaceEdit(mapping: WorkspaceMapping, workspace: Workspace, edit: lsp.WorkspaceEdit, userEvent: string) {
+    for (const uri in edit.changes) {
+        const lspChanges = edit.changes[uri];
+        const file = workspace.getFile(uri);
+        if (!lspChanges.length || !file) continue;
+        workspace.updateFile(uri, {
+            changes: lspChanges.map(change => ({
+                from: mapping.mapPosition(uri, change.range.start),
+                to: mapping.mapPosition(uri, change.range.end),
+                insert: change.newText,
+            })),
+            userEvent,
+        })
     }
 }
 

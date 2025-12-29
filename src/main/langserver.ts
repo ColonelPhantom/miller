@@ -19,6 +19,9 @@ const lspServers = new Map<string, LspEntry>();
 const fallbackServerForLanguage: Record<string, string | undefined> = {
     typescript: "npx typescript-language-server --log-level 4 --stdio",
     python: "pylsp --check-parent-process",
+    haskell: "haskell-language-server-wrapper --lsp",
+    rust: "rust-analyzer",
+    cpp: "clangd",
 };
 
 function ensureLspForKey(

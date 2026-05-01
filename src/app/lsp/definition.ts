@@ -41,10 +41,19 @@ function jumpToOrigin(view: EditorView, type: { get: typeof getDefinition, capab
     plugin.client.withMapping(mapping => type.get(plugin, view.state.selection.main.head).then(async response => {
         if (!response) return
         let loc = Array.isArray(response) ? response[0] : response;
+        // TODO: deal with special characters in pathname
+        // (node_modules/@codemirror is %40codemirror)
         const path = new URL(loc.uri).pathname;
         const target = addEditor(await OpenFile.openFile(path));
-        const pos = mapping.getMapping(loc.uri) ? mapping.mapPosition(loc.uri, loc.range.start) : plugin.fromPosition(loc.range.start, target.view.state.doc);
-        target.view.dispatch({selection: {anchor: pos}, scrollIntoView: true, userEvent: "select.definition"});
+        const pos = mapping.getMapping(loc.uri)
+            ? mapping.mapPosition(loc.uri, loc.range.start)
+            : plugin.fromPosition(loc.range.start, target.view.state.doc);
+        target.view.dispatch({
+            selection: {anchor: pos},
+            scrollIntoView: true,
+            userEvent: "select.definition",
+        });
+        setTimeout(() => target.focus(), 0);
     }, error => plugin.reportError("Find definition failed", error)))
     return true
 }

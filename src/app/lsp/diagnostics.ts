@@ -123,6 +123,7 @@ export function serverDiagnostics(): LSPClientExtension {
                     return false;
                 }
 
+                // TODO: add support for DiagnosticRelatedInformation
                 file.setDiagnostics(
                     params.diagnostics.map((item) => ({
                         from: file.changes.mapPos(

@@ -2,6 +2,7 @@ import * as lsp from "vscode-languageserver-protocol";
 import { StateEffect, StateField } from "@codemirror/state";
 import { GutterMarker, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { LSPPlugin, LSPClientExtension } from "@codemirror/lsp-client";
+import { OpenFile } from "../filestate";
 
 type GutterCodeAction = {
     

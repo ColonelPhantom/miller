@@ -7,6 +7,7 @@ import * as u from "./utils";
 import { Editor } from "./editor";
 import { Terminal } from "./terminal";
 import { Displayable } from "./displayable";
+import { QuickOpen } from "./quickopen";
 
 const EditorWrapper = (
     editor: State<Displayable>,
@@ -133,6 +134,11 @@ function shortcutHandler(e: KeyboardEvent) {
     if (e.key === "t" && e.altKey) {
         if (e.type === "keydown") {
             addTerminal();
+        }
+        e.preventDefault();
+    } else if (e.key === "p" && e.ctrlKey) {
+        if (e.type === "keydown") {
+            QuickOpen.open();
         }
         e.preventDefault();
     }

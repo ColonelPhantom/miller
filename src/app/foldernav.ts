@@ -57,7 +57,7 @@ window.electronAPI.onFsEvent(async (ev: { event: string; path: string }) => {
         // Read latest contents from disk
         const data = await window.electronAPI
             .readFile(ev.path)
-            .catch(() => null);
+            .catch((): any => null);
         if (!data) return;
         if (ev.event === "unlink") {
             openFile.knownDiskContent.val = null;
@@ -125,3 +125,19 @@ const FsItemView = (tree: FolderTree): HTMLElement => {
 
     return folder;
 };
+
+function allFilesFromTree(t: FolderTree): string[] {
+    if (t.type == "directory") {
+        return t.children.flatMap(allFilesFromTree);
+    } else if (t.type == "file") {
+        return [t.path];
+    }
+}
+
+export const allFiles = van.derive(() => {
+    if (folderTreeState.val) {
+        return allFilesFromTree(folderTreeState.val);
+    } else {
+        return [];
+    }
+})

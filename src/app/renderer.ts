@@ -6,6 +6,7 @@ const v = van.tags;
 
 import { FolderTreeView } from "./foldernav";
 import { EditorTabs, addTab, addEditor } from "./editorgrid";
+import { QuickOpen } from "./quickopen";
 import * as u from "./utils";
 import { OpenFile } from "./filestate";
 
@@ -25,6 +26,7 @@ const app = v.div(
         FolderTreeView,
     ),
     EditorTabs,
+    QuickOpen.dom,
 );
 
 van.add(document.body, app);

@@ -35,3 +35,26 @@ jobs:
           name: build-${{ matrix.os }}
           path: out/make/**/*
           if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    # Only release on pushes, not PRs
+    if: github.event_name == 'push'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pre-${{ github.sha }}
+          name: "Pre-release ${{ github.ref_name }}@${{ github.sha }}"
+          prerelease: true
+          files: artifacts/**/*

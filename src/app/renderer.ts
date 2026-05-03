@@ -15,11 +15,22 @@ function newFile() {
     addEditor(file);
 }
 
+export function toggleSidebar() {
+    if (sidebar.val == "none") {
+        sidebar.val = "tree";
+    } else if (sidebar.val == "tree") {
+        sidebar.val = "none";
+    }
+}
+
+export const sidebar = van.state<"tree" | "none">("tree");
+
 const app = v.div(
     { class: "h-screen max-h-screen w-screen max-w-screen flex" },
     v.aside(
         {
             class: "flex-none resize-x overflow-x-hidden overflow-y-scroll w-3xs min-w-32",
+            hidden: () => sidebar.val != "tree",
         },
         u.InlineButton(addTab, "Add Tab", "+Tab"),
         u.InlineButton(newFile, "Add Editor", "+File"),

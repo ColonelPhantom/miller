@@ -8,6 +8,7 @@ import { Editor } from "./editor";
 import { Terminal } from "./terminal";
 import { Displayable } from "./displayable";
 import { QuickOpen } from "./quickopen";
+import { toggleSidebar } from "./renderer";
 
 const EditorWrapper = (
     editor: State<Displayable>,
@@ -141,6 +142,10 @@ function shortcutHandler(e: KeyboardEvent) {
             QuickOpen.open();
         }
         e.preventDefault();
+    } else if (e.key === "b" && e.ctrlKey) {
+        if (e.type === "keydown") {
+            toggleSidebar();
+        }
     }
 }
 

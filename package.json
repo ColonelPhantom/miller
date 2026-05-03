@@ -57,6 +57,6 @@
     "dependencies": {
         "chokidar": "^5.0.0",
         "electron-squirrel-startup": "^1.0.1",
-        "node-pty": "^1.1.0-beta39"
+        "@lydell/node-pty": "^1.1.0"
     }
 }

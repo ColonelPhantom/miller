@@ -1,6 +1,6 @@
 {
     "name": "miller",
-    "productName": "miller",
+    "productName": "miller-ide",
     "version": "0.2.5",
     "description": "Column-based code editor",
     "main": ".vite/build/main.js",

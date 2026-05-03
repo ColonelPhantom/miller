@@ -51,7 +51,7 @@ const fixedHeightEditor = EditorView.theme({
         minHeight: "1em",
         resize: "horizontal",
         overflow: "auto",
-        width: "768px",
+        width: "864px",
         minWidth: "8em",
         flex: "none",
         fontSize: "16px",
@@ -184,7 +184,7 @@ export class Editor extends Displayable {
                 } catch (err) {
                     console.warn("Failed to apply LSP extension:", err);
                 }
-            });
+            }).catch((err) => console.warn("Failed to create LSP extension:",err));
         });
 
         van.derive(() => {

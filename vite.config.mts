@@ -5,11 +5,11 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
     plugins: [tailwindcss()],
     optimizeDeps: {
-        exclude: ["node-pty"],
+        exclude: ["@lydell/node-pty"],
     },
     build: {
         rollupOptions: {
-            external: ["node-pty"],
+            external: ["@lydell/node-pty"],
         },
     },
 });

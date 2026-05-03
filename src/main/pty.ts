@@ -1,4 +1,4 @@
-import * as pty from "node-pty";
+import * as pty from "@lydell/node-pty";
 import { getCurrentWorkspaceRoot } from "./fileOperations";
 
 export interface TerminalInstance {
